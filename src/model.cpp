@@ -4,8 +4,7 @@
 #include <stdexcept>
 
 std::unique_ptr<Model>
-Model::create(const std::string& model_path,
-              const SamplerConfig& sampler_config)
+Model::create(const std::string& model_path, const ModelConfig& sampler_config)
 {
     std::unique_ptr<Model> model(new Model());
     if (!model->initialize(model_path, sampler_config)) {
@@ -29,7 +28,7 @@ Model::~Model()
 
 bool
 Model::initialize(const std::string& model_path,
-                  const SamplerConfig& sampler_config)
+                  const ModelConfig& sampler_config)
 {
     config_ = sampler_config;
     ggml_backend_load_all();

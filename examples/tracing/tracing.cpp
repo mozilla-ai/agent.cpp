@@ -359,7 +359,8 @@ main(int argc, char** argv)
       "'3 + 5' using the tool, then use the result to calculate the final "
       "answer.";
 
-    Agent agent(std::move(model), std::move(tools), std::move(callbacks), instructions);
+    Agent agent(
+      std::move(model), std::move(tools), std::move(callbacks), instructions);
 
     printf("\nTracing Agent ready! Try asking me to do some calculations.\n");
     printf("   Type an empty line to quit.\n\n");

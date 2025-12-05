@@ -110,8 +110,7 @@ class ShellConfirmationCallback : public Callback
         }
 
         if (isatty(fileno(stdout))) {
-            printf(
-              "\n\033[34mSHELL COMMAND CONFIRMATION REQUIRED\033[0m\n");
+            printf("\n\033[34mSHELL COMMAND CONFIRMATION REQUIRED\033[0m\n");
             printf("\033[1mCommand to execute:\033[0m\n");
             printf("  \033[36m%s\033[0m\n\n", command.c_str());
             printf("Execute this command? [\033[32my\033[0m]es / "
@@ -237,10 +236,8 @@ main(int argc, char** argv)
     std::vector<std::unique_ptr<Callback>> callbacks;
     callbacks.push_back(std::make_unique<ShellConfirmationCallback>());
 
-    Agent agent(std::move(model),
-                std::move(tools),
-                std::move(callbacks),
-                instructions);
+    Agent agent(
+      std::move(model), std::move(tools), std::move(callbacks), instructions);
 
     printf("Shell Agent ready!\n");
     printf("   This agent can execute shell commands and scripts.\n");

@@ -347,10 +347,8 @@ main(int argc, char** argv)
     std::vector<std::unique_ptr<Callback>> callbacks;
     callbacks.push_back(std::make_unique<LoggingCallbacks>());
 
-    Agent agent(std::move(model),
-                std::move(tools),
-                std::move(callbacks),
-                instructions);
+    Agent agent(
+      std::move(model), std::move(tools), std::move(callbacks), instructions);
 
     printf("\nMemory Agent ready! I can remember things about you.\n");
     printf("   Try telling me your name, preferences, or ask me to remember "

@@ -9,8 +9,8 @@
 // Callback for streaming response chunks
 using ResponseCallback = std::function<void(const std::string& chunk)>;
 
-// Sampler configuration with sensible defaults
-struct SamplerConfig
+// Model configuration with sensible defaults
+struct ModelConfig
 {
     float min_p = 0.0F;
     float top_p = 1.0F;
@@ -29,7 +29,7 @@ class Model
     // Optional sampler_config allows customizing sampling parameters
     static std::unique_ptr<Model> create(
       const std::string& model_path,
-      const SamplerConfig& sampler_config = SamplerConfig{});
+      const ModelConfig& sampler_config = ModelConfig{});
 
     // Destructor - Frees sampler, context, and model resources
     ~Model();
@@ -70,7 +70,7 @@ class Model
     Model() = default;
 
     bool initialize(const std::string& model_path,
-                    const SamplerConfig& sampler_config);
+                    const ModelConfig& sampler_config);
 
     llama_model* model = nullptr;
     llama_context* ctx = nullptr;
@@ -78,5 +78,5 @@ class Model
     std::shared_ptr<common_chat_templates> templates;
     std::vector<llama_token> processed_tokens; // Track tokens in KV cache
     int n_past = 0;                            // Track position in KV cache
-    SamplerConfig config_;                     // Store sampler configuration
+    ModelConfig config_;                       // Store model configuration
 };
