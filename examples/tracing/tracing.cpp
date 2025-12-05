@@ -1,7 +1,9 @@
 #include "agent.h"
+#include "calculator_tool.h"
 #include "callbacks.h"
 #include "chat.h"
 #include "llama.h"
+#include "logging_callback.h"
 #include "model.h"
 #include "tool.h"
 
@@ -163,16 +165,6 @@ class OpenTelemetryCallback : public Callback
     void before_tool_execution(std::string& tool_name,
                                std::string& /*arguments*/) override
     {
-        // Log tool execution
-        if (isatty(fileno(stderr))) {
-            fprintf(stderr,
-                    "\n\033[34m[TOOL EXECUTION] Calling %s\033[0m\n",
-                    tool_name.c_str());
-        } else {
-            fprintf(
-              stderr, "\n[TOOL EXECUTION] Calling %s\n", tool_name.c_str());
-        }
-
         std::string span_name = "execute_tool " + tool_name;
 
         trace_api::StartSpanOptions options;
@@ -189,14 +181,6 @@ class OpenTelemetryCallback : public Callback
     void after_tool_execution(std::string& /*tool_name*/,
                               std::string& result) override
     {
-        // Log tool result
-        if (isatty(fileno(stderr))) {
-            fprintf(
-              stderr, "\033[34m[TOOL RESULT]\033[0m\n%s\n", result.c_str());
-        } else {
-            fprintf(stderr, "[TOOL RESULT]\n%s\n", result.c_str());
-        }
-
         if (tool_span) {
             if (result.find("\"error\"") != std::string::npos) {
                 tool_span->SetAttribute("error.type", "tool_execution_error");
@@ -208,68 +192,6 @@ class OpenTelemetryCallback : public Callback
             tool_span->End();
             tool_span = nullptr;
         }
-    }
-};
-
-class CalculatorTool : public Tool
-{
-  public:
-    CalculatorTool() = default;
-
-    common_chat_tool get_definition() const override
-    {
-        json schema = {
-            { "type", "object" },
-            { "properties",
-              { { "operation",
-                  { { "type", "string" },
-                    { "enum", { "add", "subtract", "multiply", "divide" } },
-                    { "description",
-                      "The mathematical operation to perform" } } },
-                { "a",
-                  { { "type", "number" },
-                    { "description", "First operand" } } },
-                { "b",
-                  { { "type", "number" },
-                    { "description", "Second operand" } } } } },
-            { "required", { "operation", "a", "b" } }
-        };
-
-        return { "calculator",
-                 "Perform basic mathematical operations",
-                 schema.dump() };
-    }
-
-    std::string get_name() const override { return "calculator"; }
-
-    std::string execute(const json& arguments) override
-    {
-        std::string op = arguments.at("operation").get<std::string>();
-        double a = arguments.at("a").get<double>();
-        double b = arguments.at("b").get<double>();
-
-        json response;
-        double result = 0;
-
-        if (op == "add") {
-            result = a + b;
-        } else if (op == "subtract") {
-            result = a - b;
-        } else if (op == "multiply") {
-            result = a * b;
-        } else if (op == "divide") {
-            if (b == 0) {
-                response["error"] = "Division by zero";
-                return response.dump();
-            }
-            result = a / b;
-        } else {
-            response["error"] = "Unknown operation: " + op;
-            return response.dump();
-        }
-
-        response["result"] = result;
-        return response.dump();
     }
 };
 
@@ -345,6 +267,7 @@ main(int argc, char** argv)
     printf("Model loaded and initialized successfully\n");
 
     std::vector<std::unique_ptr<Callback>> callbacks;
+    callbacks.push_back(std::make_unique<LoggingCallback>());
     callbacks.push_back(std::make_unique<OpenTelemetryCallback>(
       model_name, "llama.cpp", "agent.cpp"));
 

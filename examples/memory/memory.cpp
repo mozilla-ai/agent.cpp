@@ -2,6 +2,7 @@
 #include "callbacks.h"
 #include "chat.h"
 #include "llama.h"
+#include "logging_callback.h"
 #include "model.h"
 #include "tool.h"
 #include <cstdio>
@@ -224,35 +225,6 @@ class ListMemoryTool : public Tool
     }
 };
 
-// Logging callback to display tool execution information
-class LoggingCallbacks : public Callbacks
-{
-  public:
-    void before_tool_execution(std::string& tool_name,
-                               std::string& arguments) override
-    {
-        if (isatty(fileno(stderr))) {
-            fprintf(stderr,
-                    "\n\033[34m[TOOL EXECUTION] Calling %s\033[0m\n",
-                    tool_name.c_str());
-        } else {
-            fprintf(
-              stderr, "\n[TOOL EXECUTION] Calling %s\n", tool_name.c_str());
-        }
-    }
-
-    void after_tool_execution(std::string& tool_name,
-                              std::string& result) override
-    {
-        if (isatty(fileno(stderr))) {
-            fprintf(
-              stderr, "\033[34m[TOOL RESULT]\033[0m\n%s\n", result.c_str());
-        } else {
-            fprintf(stderr, "[TOOL RESULT]\n%s\n", result.c_str());
-        }
-    }
-};
-
 static const char* DEFAULT_MEMORY_FILE = "memories.json";
 
 static void
@@ -345,7 +317,7 @@ main(int argc, char** argv)
       "memories.";
 
     std::vector<std::unique_ptr<Callback>> callbacks;
-    callbacks.push_back(std::make_unique<LoggingCallbacks>());
+    callbacks.push_back(std::make_unique<LoggingCallback>());
 
     Agent agent(
       std::move(model), std::move(tools), std::move(callbacks), instructions);

@@ -50,6 +50,7 @@ add_executable(tracing-example tracing.cpp)
 
 target_include_directories(tracing-example PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src
+    ${CMAKE_CURRENT_SOURCE_DIR}/../shared
     ${LLAMA_SOURCE_DIR}/common
     ${LLAMA_SOURCE_DIR}/ggml/include
     ${LLAMA_SOURCE_DIR}/include
