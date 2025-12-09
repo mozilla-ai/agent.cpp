@@ -83,12 +83,16 @@ class MemoryStore
     }
 };
 
-static std::shared_ptr<MemoryStore> g_memory_store;
-
 class WriteMemoryTool : public Tool
 {
+  private:
+    std::shared_ptr<MemoryStore> store_;
+
   public:
-    WriteMemoryTool() = default;
+    explicit WriteMemoryTool(std::shared_ptr<MemoryStore> store)
+      : store_(std::move(store))
+    {
+    }
 
     common_chat_tool get_definition() const override
     {
@@ -123,7 +127,7 @@ class WriteMemoryTool : public Tool
         std::string key = arguments.at("key").get<std::string>();
         std::string value = arguments.at("value").get<std::string>();
 
-        g_memory_store->write(key, value);
+        store_->write(key, value);
 
         json response;
         response["success"] = true;
@@ -135,8 +139,14 @@ class WriteMemoryTool : public Tool
 
 class ReadMemoryTool : public Tool
 {
+  private:
+    std::shared_ptr<MemoryStore> store_;
+
   public:
-    ReadMemoryTool() = default;
+    explicit ReadMemoryTool(std::shared_ptr<MemoryStore> store)
+      : store_(std::move(store))
+    {
+    }
 
     common_chat_tool get_definition() const override
     {
@@ -167,8 +177,8 @@ class ReadMemoryTool : public Tool
 
         json response;
 
-        if (g_memory_store->has_key(key)) {
-            std::string value = g_memory_store->read(key);
+        if (store_->has_key(key)) {
+            std::string value = store_->read(key);
             response["success"] = true;
             response["key"] = key;
             response["value"] = value;
@@ -176,7 +186,7 @@ class ReadMemoryTool : public Tool
             response["success"] = false;
             response["message"] = "No memory found with key '" + key + "'";
 
-            auto keys = g_memory_store->list_keys();
+            auto keys = store_->list_keys();
             if (!keys.empty()) {
                 response["available_keys"] = keys;
             }
@@ -188,8 +198,14 @@ class ReadMemoryTool : public Tool
 
 class ListMemoryTool : public Tool
 {
+  private:
+    std::shared_ptr<MemoryStore> store_;
+
   public:
-    ListMemoryTool() = default;
+    explicit ListMemoryTool(std::shared_ptr<MemoryStore> store)
+      : store_(std::move(store))
+    {
+    }
 
     common_chat_tool get_definition() const override
     {
@@ -210,7 +226,7 @@ class ListMemoryTool : public Tool
     std::string execute(const json& /*arguments*/) override
     {
         json response;
-        auto keys = g_memory_store->list_keys();
+        auto keys = store_->list_keys();
 
         if (keys.empty()) {
             response["success"] = true;
@@ -269,14 +285,14 @@ main(int argc, char** argv)
     }
 
     printf("Initializing memory store...\n");
-    g_memory_store = std::make_shared<MemoryStore>(memory_file);
+    auto memory_store = std::make_shared<MemoryStore>(memory_file);
     printf("   Using storage file: %s\n", memory_file.c_str());
 
     printf("Setting up memory tools...\n");
     std::vector<std::unique_ptr<Tool>> tools;
-    tools.push_back(std::make_unique<WriteMemoryTool>());
-    tools.push_back(std::make_unique<ReadMemoryTool>());
-    tools.push_back(std::make_unique<ListMemoryTool>());
+    tools.push_back(std::make_unique<WriteMemoryTool>(memory_store));
+    tools.push_back(std::make_unique<ReadMemoryTool>(memory_store));
+    tools.push_back(std::make_unique<ListMemoryTool>(memory_store));
     printf("Configured tools: write_memory, read_memory, list_memory\n");
 
     printf("Loading model...\n");
