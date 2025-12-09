@@ -45,8 +45,8 @@ Model::initialize(const std::string& model_path,
     }
 
     llama_context_params ctx_params = llama_context_default_params();
-    ctx_params.n_ctx = 10240;
-    ctx_params.n_batch = -1;
+    ctx_params.n_ctx = model_config.n_ctx;
+    ctx_params.n_batch = model_config.n_batch;
 
     ctx = llama_init_from_model(model, ctx_params);
     if (ctx == nullptr) {

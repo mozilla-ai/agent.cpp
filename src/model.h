@@ -18,6 +18,8 @@ struct ModelConfig
     float temp = 0.0F;
     uint32_t seed = LLAMA_DEFAULT_SEED;
     common_chat_format chat_format = COMMON_CHAT_FORMAT_HERMES_2_PRO;
+    int n_ctx = 10240;
+    int n_batch = -1;
 };
 
 // Model interface - encapsulates model initialization and text generation
