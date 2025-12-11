@@ -2,7 +2,17 @@
 
 Building blocks for **local** agents in C++.
 
-> **Note:** This library is designed for running small language models locally using [llama.cpp](https://github.com/ggml-org/llama.cpp). It does not support cloud-based APIs (OpenAI, Anthropic, etc.). If you need to call external LLM APIs, this library is not the right fit.
+> **Note:** This library is designed for running small language models locally using [llama.cpp](https://github.com/ggml-org/llama.cpp). It does not support cloud-based APIs (OpenAI, Anthropic, etc.). If you want to call external LLM APIs, this is not the right fit.
+
+## Examples
+
+- **[Context Engineering](./context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
+
+- **[Memory](./memory/README.md)** - Use tools that allow an agent to store and retrieve relevant information across conversations.
+
+- **[Shell](./shell/README.md)** - Allow an agent to write shell scripts to perform multiple actions at once. Demonstrates human-in-the-loop interactions via callbacks.
+
+- **[Tracing](./tracing/README.md)** - Use callbacks to collect a record of the steps of the agent loop with OpenTelemetry.
 
 ## Building Blocks
 
@@ -128,10 +138,6 @@ Tools extend the agent's capabilities beyond text generation. Each tool defines:
 - **Execute function** - The actual implementation
 
 When the model decides to use a tool, the agent parses the tool call, executes it, and feeds the result back into the conversation.
-
-## Examples
-
-See [examples/README.md](./examples/README.md) for complete examples demonstrating callbacks, tools, human-in-the-loop interactions, and tracing.
 
 ## Usage
 

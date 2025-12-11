@@ -2,16 +2,6 @@
 
 This directory contains example applications demonstrating agent.cpp capabilities.
 
-## Available Examples
-
-- **[Context Engineering](./context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
-
-- **[Memory](./memory/README.md)** - Use tools that allow an agent to store and retrieve relevant information across conversations.
-
-- **[Shell](./shell/README.md)** - Allow an agent to write shell scripts to perform multiple actions at once. Demonstrates human-in-the-loop interactions via callbacks.
-
-- **[Tracing](./tracing/README.md)** - Use callbacks to collect a record of the steps of the agent loop with OpenTelemetry.
-
 ## Shared Utilities
 
 The [shared](./shared) directory contains reusable helper components used across multiple examples. These are **not part of the public API** but can be useful as reference implementations.
