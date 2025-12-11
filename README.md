@@ -1,6 +1,8 @@
 # agent.cpp
 
-Building blocks for agents in C++.
+Building blocks for **local** agents in C++.
+
+> **Note:** This library is designed for running small language models locally using [llama.cpp](https://github.com/ggml-org/llama.cpp). It does not support cloud-based APIs (OpenAI, Anthropic, etc.). If you need to call external LLM APIs, this library is not the right fit.
 
 ## Building Blocks
 
@@ -74,9 +76,13 @@ A system prompt that defines the agent's behavior and capabilities. Passed to th
 
 ### Model
 
-Encapsulates LLM initialization and inference using [llama.cpp](https://github.com/ggml-org/llama.cpp). Handles:
+Encapsulates **local** LLM initialization and inference using [llama.cpp](https://github.com/ggml-org/llama.cpp). This is tightly coupled to llama.cpp and requires models in GGUF format.
 
-- Loading GGUF model files
+> **Architectural note:** The `Model` class is not backend-agnostic. It is built specifically for local inference with llama.cpp. There is no abstraction layer for swapping in cloud-based providers like OpenAI or Anthropic.
+
+Handles:
+
+- Loading GGUF model files (quantized models recommended for efficiency)
 - Chat template application and tokenization
 - Text generation with configurable sampling (temperature, top_p, top_k, etc.)
 - KV cache management for efficient prompt caching
