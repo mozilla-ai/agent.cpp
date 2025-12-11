@@ -4,6 +4,7 @@
 #include "chat.h"
 #include "chat_loop.h"
 #include "error.h"
+#include "error_recovery_callback.h"
 #include "llama.h"
 #include "logging_callback.h"
 #include "model.h"
@@ -204,6 +205,7 @@ main(int argc, char** argv)
     callbacks.push_back(
       std::make_unique<ContextTrimmerCallback>(max_tool_calls));
     callbacks.push_back(std::make_unique<LoggingCallback>());
+    callbacks.push_back(std::make_unique<ErrorRecoveryCallback>());
 
     agent_cpp::Agent agent(
       std::move(model), std::move(tools), std::move(callbacks), instructions);

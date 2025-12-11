@@ -3,6 +3,7 @@
 #include "chat.h"
 #include "chat_loop.h"
 #include "error.h"
+#include "error_recovery_callback.h"
 #include "llama.h"
 #include "model.h"
 #include "prompt_cache.h"
@@ -236,6 +237,7 @@ main(int argc, char** argv)
 
     std::vector<std::unique_ptr<agent_cpp::Callback>> callbacks;
     callbacks.push_back(std::make_unique<ShellConfirmationCallback>());
+    callbacks.push_back(std::make_unique<ErrorRecoveryCallback>());
 
     agent_cpp::Agent agent(
       std::move(model), std::move(tools), std::move(callbacks), instructions);

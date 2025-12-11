@@ -4,6 +4,7 @@
 #include "chat.h"
 #include "chat_loop.h"
 #include "error.h"
+#include "error_recovery_callback.h"
 #include "llama.h"
 #include "logging_callback.h"
 #include "model.h"
@@ -265,6 +266,7 @@ main(int argc, char** argv)
 
     std::vector<std::unique_ptr<agent_cpp::Callback>> callbacks;
     callbacks.push_back(std::make_unique<LoggingCallback>());
+    callbacks.push_back(std::make_unique<ErrorRecoveryCallback>());
     callbacks.push_back(std::make_unique<OpenTelemetryCallback>(
       model_name, "llama.cpp", "agent.cpp"));
 
