@@ -18,7 +18,7 @@ target_include_directories(shell-example PRIVATE
     ${LLAMA_SOURCE_DIR}/vendor
 )
 
-target_link_libraries(shell-example PRIVATE agent model common llama)
+target_link_libraries(shell-example PRIVATE agent-cpp::agent common llama)
 target_compile_features(shell-example PRIVATE cxx_std_17)
 
 message(STATUS "Shell tool example configured.")

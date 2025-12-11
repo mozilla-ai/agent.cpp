@@ -12,6 +12,35 @@ We define an `agent` with the following building blocks:
 - [Model](./#model)
 - [Tools](./#tools)
 
+```cpp
+#include "agent.h"
+#include "model.h"
+#include "tool.h"
+
+int main() {
+    // Load a GGUF model
+    auto model = agent_cpp::Model::create("model.gguf");
+
+    // Define tools the agent can use
+    std::vector<std::unique_ptr<agent_cpp::Tool>> tools;
+    tools.push_back(std::make_unique<CalculatorTool>());
+
+    // Create the agent
+    agent_cpp::Agent agent(
+        std::move(model),
+        std::move(tools),
+        {},  // callbacks (optional)
+        "You are a helpful assistant."  // instructions
+    );
+
+    // Run the agent loop
+    std::vector<common_chat_msg> messages = {
+        {"user", "What is 42 * 17?"}
+    };
+    std::string response = agent.run_loop(messages);
+}
+```
+
 ## Agent Loop
 
 In the current LLM (Large Language Models) world, and `agent` is usually a simple loop that intersperses `Model Calls` and `Tool Executions`, until a stop condition is met:
@@ -72,7 +101,7 @@ Check instructions for building and running:
 - [Memory](./examples/memory/README.md)
     Use `tools` that allow an agent to store and retrieve relevant information across conversations.
 
-- [Shell execution with human-in-the-loop](./examples/memory/README.md)
+- [Shell execution with human-in-the-loop](./examples/shell/README.md)
     Allow an agent to write shell scripts to perform multiple actions at once instead of calling separate `tools`.
     Use `callbacks` for human-in-the-loop interactions.
 
@@ -93,6 +122,8 @@ The [examples/shared](./examples/shared) directory contains reusable components 
 
 ## Usage
 
+**Requirements:** C++17 or higher.
+
 ### Option 1: FetchContent (Recommended)
 
 The easiest way to integrate agent.cpp into your CMake project:
@@ -107,7 +138,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(agent-cpp)
 
 add_executable(my_app main.cpp)
-target_link_libraries(my_app PRIVATE agent model)
+target_link_libraries(my_app PRIVATE agent-cpp::agent)
 ```
 
 ### Option 2: Installed Package
@@ -148,7 +179,7 @@ git submodule update --init --recursive
 
 ```cmake
 add_subdirectory(agent.cpp)
-target_link_libraries(my_app PRIVATE agent model)
+target_link_libraries(my_app PRIVATE agent-cpp::agent)
 ```
 
 ### Hardware Acceleration

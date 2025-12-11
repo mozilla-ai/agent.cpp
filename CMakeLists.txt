@@ -48,6 +48,7 @@ else()
 endif()
 
 add_library(model STATIC src/model.cpp)
+add_library(agent-cpp::model ALIAS model)
 target_include_directories(model
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
@@ -60,6 +61,7 @@ target_link_libraries(model PUBLIC common llama)
 target_compile_features(model PUBLIC cxx_std_17)
 
 add_library(agent STATIC src/agent.cpp)
+add_library(agent-cpp::agent ALIAS agent)
 target_include_directories(agent
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>

@@ -18,7 +18,7 @@ target_include_directories(context-engineering-example PRIVATE
     ${LLAMA_SOURCE_DIR}/vendor
 )
 
-target_link_libraries(context-engineering-example PRIVATE agent model common llama)
+target_link_libraries(context-engineering-example PRIVATE agent-cpp::agent common llama)
 target_compile_features(context-engineering-example PRIVATE cxx_std_17)
 
 message(STATUS "Context engineering example configured.")
