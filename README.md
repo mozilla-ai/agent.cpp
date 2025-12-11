@@ -14,32 +14,64 @@ We define an `agent` with the following building blocks:
 - [Model](./#model)
 - [Tools](./#tools)
 
+Minimal example:
+
 ```cpp
 #include "agent.h"
+#include "callbacks.h"
 #include "model.h"
 #include "tool.h"
+#include <iostream>
+
+class CalculatorTool : public agent_cpp::Tool {
+  public:
+    common_chat_tool get_definition() const override {
+        agent_cpp::json schema = {
+            {"type", "object"},
+            {"properties", {
+                {"a", {{"type", "number"}, {"description", "First operand"}}},
+                {"b", {{"type", "number"}, {"description", "Second operand"}}}
+            }},
+            {"required", {"a", "b"}}
+        };
+        return {"multiply", "Multiply two numbers", schema.dump()};
+    }
+
+    std::string get_name() const override { return "multiply"; }
+
+    std::string execute(const agent_cpp::json& args) override {
+        double a = args.at("a").get<double>();
+        double b = args.at("b").get<double>();
+        return std::to_string(a * b);
+    }
+};
+
+class LoggingCallback : public agent_cpp::Callback {
+  public:
+    void before_tool_execution(std::string& tool_name, std::string& args) override {
+        std::cerr << "[TOOL] Calling " << tool_name << " with " << args << "\n";
+    }
+};
 
 int main() {
-    // Load a GGUF model
     auto model = agent_cpp::Model::create("model.gguf");
 
-    // Define tools the agent can use
     std::vector<std::unique_ptr<agent_cpp::Tool>> tools;
     tools.push_back(std::make_unique<CalculatorTool>());
 
-    // Create the agent
+    std::vector<std::unique_ptr<agent_cpp::Callback>> callbacks;
+    callbacks.push_back(std::make_unique<LoggingCallback>());
+
     agent_cpp::Agent agent(
         std::move(model),
         std::move(tools),
-        {},  // callbacks (optional)
-        "You are a helpful assistant."  // instructions
+        std::move(callbacks),
+        "You are a helpful assistant."
     );
 
-    // Run the agent loop
-    std::vector<common_chat_msg> messages = {
-        {"user", "What is 42 * 17?"}
-    };
+    std::vector<common_chat_msg> messages = {{"user", "What is 42 * 17?"}};
     std::string response = agent.run_loop(messages);
+    std::cout << response << std::endl;
 }
 ```
 
@@ -99,36 +131,9 @@ When the model decides to use a tool, the agent parses the tool call, executes i
 
 ## Examples
 
-Check instructions for building and running:
-
-- [Context Engineering](./examples/context-engineering/README.md)
-    Use `callbacks` to manipulate the context between iterations of the agent loop.
-
-- [Memory](./examples/memory/README.md)
-    Use `tools` that allow an agent to store and retrieve relevant information across conversations.
-
-- [Shell execution with human-in-the-loop](./examples/shell/README.md)
-    Allow an agent to write shell scripts to perform multiple actions at once instead of calling separate `tools`.
-    Use `callbacks` for human-in-the-loop interactions.
-
-- [Tracing with OpenTelemetry](./examples/tracing/README.md)
-    Use `callbacks` to collect a record of the steps of the agent loop.
-
-### Shared Utilities
-
-The [examples/shared](./examples/shared) directory contains reusable components used across multiple examples:
-
-| File | Description |
-|------|-------------|
-| `calculator_tool.h` | A simple calculator tool for basic math operations (add, subtract, multiply, divide). Demonstrates how to implement a `Tool` with JSON Schema parameters. |
-| `chat_loop.h` | Interactive chat loop that reads user input from stdin and prints agent responses. Handles colored output for TTY terminals. |
-| `error_recovery_callback.h` | Callback that converts tool errors into JSON results, allowing the agent to see errors and retry gracefully instead of crashing. |
-| `logging_callback.h` | Callback that logs tool calls and their results to stderr. Useful for debugging and understanding agent behavior. |
-| `prompt_cache.h` | Utilities for building and caching the agent's system prompt tokens. Speeds up startup by reusing cached KV state. |
+See [examples/README.md](./examples/README.md) for complete examples demonstrating callbacks, tools, human-in-the-loop interactions, and tracing.
 
 ## Usage
-
-**Requirements:** C++17 or higher.
 
 ### Option 1: FetchContent (Recommended)
 
@@ -201,3 +206,13 @@ cmake -B build -DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS
 ```
 
 For a complete list of build options and backend-specific instructions, see the [llama.cpp build documentation](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md).
+
+### Technical Details
+
+**C++ Standard:** Requires **C++17** or higher.
+
+**Thread Safety:** The `Agent` and `Model` classes are **not thread-safe**. A single `Agent` instance should not be accessed concurrently from multiple threads. If you need concurrent agents, create separate instances per thread.
+
+**Exceptions:** All exceptions derive from `agent_cpp::Error` (which extends `std::runtime_error`), allowing you to catch all library errors with a single `catch (const agent_cpp::Error&)` block.
+
+To handle tool errors gracefully without exceptions propagating, check the [`error_recovery_callback](./examples/shared) which converts tool errors into JSON results that the model can see and retry.
