@@ -211,7 +211,29 @@ For a complete list of build options and backend-specific instructions, see the 
 
 **C++ Standard:** Requires **C++17** or higher.
 
-**Thread Safety:** The `Agent` and `Model` classes are **not thread-safe**. A single `Agent` instance should not be accessed concurrently from multiple threads. If you need concurrent agents, create separate instances per thread.
+**Thread Safety:** The `Agent` and `Model` classes are **not thread-safe**. A single `Agent` or `Model` instance should not be accessed concurrently from multiple threads.
+
+**Resource Sharing:** The library separates model weights from inference context to enable efficient VRAM usage:
+
+- **`ModelWeights`**: Holds the immutable model weights (the heavy VRAM consumer). Create once with `ModelWeights::create(path)` and share via `std::shared_ptr` across multiple `Model` instances.
+- **`Model`**: Holds a context (KV cache, sampler state) and a reference to shared weights. Each `Model` has its own conversation state.
+
+This architecture enables multiple concurrent agents sharing the same weights without loading them multiple times:
+
+```cpp
+// Load weights once (heavy VRAM usage)
+auto weights = agent_cpp::ModelWeights::create("model.gguf");
+
+// Create multiple models sharing the same weights (lightweight)
+auto validator_model = agent_cpp::Model::create_with_weights(weights);
+auto generator_model = agent_cpp::Model::create_with_weights(weights);
+
+// Each agent has independent conversation state
+Agent validator(validator_model, validator_tools);
+Agent generator(generator_model, generator_tools);
+```
+
+For simple single-agent use cases, `Model::create(path)` still works and handles everything internally.
 
 **Exceptions:** All exceptions derive from `agent_cpp::Error` (which extends `std::runtime_error`), allowing you to catch all library errors with a single `catch (const agent_cpp::Error&)` block.
 

@@ -27,20 +27,84 @@ struct ModelConfig
     int n_batch = -1;
 };
 
-// Model interface - encapsulates model initialization and text generation
+// Forward declaration
+class Model;
+
+/// @brief Immutable model weights that can be shared across multiple Model
+/// instances.
+///
+/// ModelWeights loads the model file once and holds the heavy VRAM/memory
+/// resources. Multiple Model instances (each with their own context/KV cache)
+/// can share the same ModelWeights, enabling concurrent agents without loading
+/// weights multiple times.
+class ModelWeights
+{
+    friend class Model;
+
+  public:
+    /// @brief Load model weights from a GGUF file
+    /// @param model_path Path to the GGUF model file
+    /// @return Shared pointer to the loaded weights
+    /// @throws agent_cpp::ModelError if loading fails
+    static std::shared_ptr<ModelWeights> create(const std::string& model_path);
+
+    ~ModelWeights();
+
+    // Non-copyable, non-movable (shared via shared_ptr)
+    ModelWeights(const ModelWeights&) = delete;
+    ModelWeights& operator=(const ModelWeights&) = delete;
+    ModelWeights(ModelWeights&&) = delete;
+    ModelWeights& operator=(ModelWeights&&) = delete;
+
+    /// @brief Get the underlying llama_model pointer
+    [[nodiscard]] llama_model* get_model() const { return model_; }
+
+    /// @brief Get the chat templates
+    [[nodiscard]] common_chat_templates* get_templates() const
+    {
+        return templates_.get();
+    }
+
+    /// @brief Get the vocabulary for tokenization
+    [[nodiscard]] const llama_vocab* get_vocab() const
+    {
+        return llama_model_get_vocab(model_);
+    }
+
+  private:
+    ModelWeights() = default;
+
+    llama_model* model_ = nullptr;
+    std::shared_ptr<common_chat_templates> templates_;
+};
+
+// Model interface - encapsulates context and text generation
+// Each Model instance has its own context (KV cache) but can share weights
 class Model
 {
   public:
     /// @brief Initialize the model from a GGUF file
     /// @param model_path Path to the GGUF model file
-    /// @param sampler_config Optional sampling configuration
-    /// @return Unique pointer to the initialized Model
+    /// @param model_config Optional configuration
+    /// @return Shared pointer to the initialized Model
     /// @throws agent_cpp::ModelError if model loading or initialization fails
     static std::shared_ptr<Model> create(
       const std::string& model_path,
-      const ModelConfig& sampler_config = ModelConfig{});
+      const ModelConfig& model_config = ModelConfig{});
 
-    // Destructor - Frees sampler, context, and model resources
+    /// @brief Create a new Model instance sharing weights with existing weights
+    /// @param weights Shared pointer to ModelWeights
+    /// @param model_config Optional configuration
+    /// @return Shared pointer to the new Model
+    /// @throws agent_cpp::ModelError if context creation fails
+    ///
+    /// This enables multiple agents with independent contexts (KV caches)
+    /// sharing the same model weights, avoiding duplicate VRAM usage.
+    static std::shared_ptr<Model> create_with_weights(
+      std::shared_ptr<ModelWeights> weights,
+      const ModelConfig& model_config = ModelConfig{});
+
+    // Destructor - Frees sampler and context (weights are ref-counted)
     ~Model();
 
     // Delete copy operations to prevent double-free
@@ -71,17 +135,23 @@ class Model
     // Get the chat templates
     [[nodiscard]] common_chat_templates* get_templates() const
     {
-        return templates.get();
+        return weights_->get_templates();
     }
 
     // Get the vocabulary for tokenization
     [[nodiscard]] const llama_vocab* get_vocab() const
     {
-        return llama_model_get_vocab(model);
+        return weights_->get_vocab();
     }
 
     // Get the context for KV cache management
-    [[nodiscard]] llama_context* get_context() const { return ctx; }
+    [[nodiscard]] llama_context* get_context() const { return ctx_; }
+
+    // Get the shared weights (for creating additional Model instances)
+    [[nodiscard]] std::shared_ptr<ModelWeights> get_weights() const
+    {
+        return weights_;
+    }
 
     // Save the current KV cache state (processed_tokens) to a file
     // Returns true on success, false on failure
@@ -96,21 +166,19 @@ class Model
     // Set the internal cache state (used when loading from prompt cache)
     void set_cache_state(const std::vector<llama_token>& tokens)
     {
-        processed_tokens = tokens;
-        n_past = static_cast<int>(tokens.size());
+        processed_tokens_ = tokens;
+        n_past_ = static_cast<int>(tokens.size());
     }
     Model() = default;
 
-    void initialize(const std::string& model_path,
-                    const ModelConfig& sampler_config);
+    void initialize_context(const ModelConfig& model_config);
 
-    llama_model* model = nullptr;
-    llama_context* ctx = nullptr;
-    llama_sampler* sampler = nullptr;
-    std::shared_ptr<common_chat_templates> templates;
-    std::vector<llama_token> processed_tokens; // Track tokens in KV cache
-    int n_past = 0;                            // Track position in KV cache
-    ModelConfig config_;                       // Store model configuration
+    std::shared_ptr<ModelWeights> weights_;
+    llama_context* ctx_ = nullptr;
+    llama_sampler* sampler_ = nullptr;
+    std::vector<llama_token> processed_tokens_; // Track tokens in KV cache
+    int n_past_ = 0;                            // Track position in KV cache
+    ModelConfig config_;
 };
 
 } // namespace agent_cpp
