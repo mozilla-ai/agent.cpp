@@ -2,26 +2,9 @@
 
 Building blocks for agents in C++.
 
-## Why this repo?
-
-- There is a wide variety of agent frameworks available, but the most popular ones implemented in Python and/or TypeScript.
-
-    We are pushing the direction of small, specialized, **local** agents, where C++ is a much better fit.
-
-- Everyone is still figuring out what features and/or patterns work best for agentic systems.
-
-    The building blocks provided here are flexible enough to implement most (all?) of the currently popular features and/or patterns
-    and adapt to new trends.
-    If you think "*that could be a callback of a tool*", you are probably right.
-
-- Frameworks justify their existence (and/or fundraising) by providing built-in features and patterns.
-
-    You are "paying" (with latency, memory and/or code maintenance) for features that your system doesn't need.
-    Implementing those features by yourself is usually not that much effort, with the benefit of having full control and flexibility.
-
 ## Building Blocks
 
-We define an `agent` by 5 building blocks:
+We define an `agent` with the following building blocks:
 
 - [Agent Loop](./#agent-loop)
 - [Callbacks](./#callbacks)
@@ -29,7 +12,86 @@ We define an `agent` by 5 building blocks:
 - [Model](./#model)
 - [Tools](./#tools)
 
-## Integration
+## Agent Loop
+
+In the current LLM (Large Language Models) world, and `agent` is usually a simple loop that intersperses `Model Calls` and `Tool Executions`, until a stop condition is met:
+
+```mermaid
+graph TD
+    User([User Input]) --> Model[Model Call]
+    Model --> Decision{Stop Condition Met?}
+    Decision -->|Yes| End([End])
+    Decision -->|No| Tool[Tool Execution]
+    Tool --> Model
+```
+
+There are different ways to implement the stop condition.
+By default we let the agent decide by generating an output *without* tool executions.
+You can implement additional stop conditions via callbacks.
+
+### Callbacks
+
+Callbacks allow you to hook into the agent lifecycle at specific points:
+
+- `before_agent_loop` / `after_agent_loop` - Run logic at the start/end of the agent loop
+- `before_llm_call` / `after_llm_call` - Intercept or modify messages before/after model inference
+- `before_tool_execution` / `after_tool_execution` - Validate, skip, or handle tool calls and their results
+
+Use callbacks for logging, context manipulation, human-in-the-loop approval, or error recovery.
+
+### Instructions
+
+A system prompt that defines the agent's behavior and capabilities. Passed to the `Agent` constructor and automatically prepended to conversations.
+
+### Model
+
+Encapsulates LLM initialization and inference using [llama.cpp](https://github.com/ggml-org/llama.cpp). Handles:
+
+- Loading GGUF model files
+- Chat template application and tokenization
+- Text generation with configurable sampling (temperature, top_p, top_k, etc.)
+- KV cache management for efficient prompt caching
+
+### Tools
+
+Tools extend the agent's capabilities beyond text generation. Each tool defines:
+
+- **Name and description** - Helps the model understand when to use it
+- **Parameters schema** - JSON Schema defining expected arguments
+- **Execute function** - The actual implementation
+
+When the model decides to use a tool, the agent parses the tool call, executes it, and feeds the result back into the conversation.
+
+## Examples
+
+Check instructions for building and running:
+
+- [Context Engineering](./examples/context-engineering/README.md)
+    Use `callbacks` to manipulate the context between iterations of the agent loop.
+
+- [Memory](./examples/memory/README.md)
+    Use `tools` that allow an agent to store and retrieve relevant information across conversations.
+
+- [Shell execution with human-in-the-loop](./examples/memory/README.md)
+    Allow an agent to write shell scripts to perform multiple actions at once instead of calling separate `tools`.
+    Use `callbacks` for human-in-the-loop interactions.
+
+- [Tracing with OpenTelemetry](./examples/tracing/README.md)
+    Use `callbacks` to collect a record of the steps of the agent loop.
+
+### Shared Utilities
+
+The [examples/shared](./examples/shared) directory contains reusable components used across multiple examples:
+
+| File | Description |
+|------|-------------|
+| `calculator_tool.h` | A simple calculator tool for basic math operations (add, subtract, multiply, divide). Demonstrates how to implement a `Tool` with JSON Schema parameters. |
+| `chat_loop.h` | Interactive chat loop that reads user input from stdin and prints agent responses. Handles colored output for TTY terminals. |
+| `error_recovery_callback.h` | Callback that converts tool errors into JSON results, allowing the agent to see errors and retry gracefully instead of crashing. |
+| `logging_callback.h` | Callback that logs tool calls and their results to stderr. Useful for debugging and understanding agent behavior. |
+| `prompt_cache.h` | Utilities for building and caching the agent's system prompt tokens. Speeds up startup by reusing cached KV state. |
+
+## Usage
 
 ### Option 1: FetchContent (Recommended)
 
@@ -89,7 +151,7 @@ add_subdirectory(agent.cpp)
 target_link_libraries(my_app PRIVATE agent model)
 ```
 
-## Hardware Acceleration
+### Hardware Acceleration
 
 This project uses [llama.cpp](https://github.com/ggml-org/llama.cpp) as a submodule. You can enable hardware-specific acceleration by passing the appropriate CMake flags when building. For example:
 
@@ -102,44 +164,3 @@ cmake -B build -DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS
 ```
 
 For a complete list of build options and backend-specific instructions, see the [llama.cpp build documentation](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md).
-
-## Examples
-
-- [Memory](./examples/memory/README.md)
-    Use `tools` that allow an agent to store and retrieve relevant information across conversations.
-
-- [Opentelemetry Tracing](./examples/tracing/README.md)
-    Use `callbacks` collect a record of the steps of the agent loop.
-
-- [Shell execution with human-in-the-loop](./examples/memory/README.md)
-    Allow an agent to write shell scripts to perform multiple actions instead of calling different tools.
-    Use `callbacks` for human-in-the-loop interactions.
-
-- [Context Engineering](./examples/context-engineering/README.md)
-    Use `callbacks` to manipulate the context between iterations of the agent loop.
-
-## Agent Loop
-
-In the current LLM (Large Language Models) world, and `agent` is usually a simple loop that intersperses `Model Calls` and `Tool Executions`, until a stop condition is met:
-
-```mermaid
-graph TD
-    User([User Input]) --> Model[Model Call]
-    Model --> Decision{Stop Condition Met?}
-    Decision -->|Yes| End([End])
-    Decision -->|No| Tool[Tool Execution]
-    Tool --> Model
-```
-
-There are different ways to implement the stop condition.
-By default we let the agent decide by generating an output *without* tool executions.
-You can implement additional stop conditions via callbacks.
-
-## Callbacks
-
-Callbacks allow you to insert logic deterministically before and/or after specific points in the loop:
-
-## Tools
-
-Current Models can only generate static content like text (let's leave)
-A tool is a convention established between the user and the LLM,
