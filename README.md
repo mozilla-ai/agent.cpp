@@ -6,13 +6,15 @@ Building blocks for **local** agents in C++.
 
 ## Examples
 
-- **[Context Engineering](./context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
+- **[Context Engineering](./examples/context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
 
-- **[Memory](./memory/README.md)** - Use tools that allow an agent to store and retrieve relevant information across conversations.
+- **[Memory](./examples/memory/README.md)** - Use tools that allow an agent to store and retrieve relevant information across conversations.
 
-- **[Shell](./shell/README.md)** - Allow an agent to write shell scripts to perform multiple actions at once. Demonstrates human-in-the-loop interactions via callbacks.
+- **[Multi-Agent](./examples/multi-agent/README.md)** - Build a multi-agent system with weight sharing where a main agent delegates to specialized sub-agents.
 
-- **[Tracing](./tracing/README.md)** - Use callbacks to collect a record of the steps of the agent loop with OpenTelemetry.
+- **[Shell](./examples/shell/README.md)** - Allow an agent to write shell scripts to perform multiple actions at once. Demonstrates human-in-the-loop interactions via callbacks.
+
+- **[Tracing](./examples/tracing/README.md)** - Use callbacks to collect a record of the steps of the agent loop with OpenTelemetry.
 
 ## Building Blocks
 
