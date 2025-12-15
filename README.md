@@ -5,7 +5,7 @@ Building blocks for **local** agents in C++.
 > [!NOTE]
 > This library is designed for running small language models locally using [llama.cpp](https://github.com/ggml-org/llama.cpp). If you want to call external LLM APIs, this is not the right fit.
 
-## Examples
+# Examples
 
 - **[Context Engineering](./examples/context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
 
@@ -26,7 +26,7 @@ wget https://huggingface.co/ibm-granite/granite-4.0-micro-GGUF/resolve/main/gran
 > [!IMPORTANT]
 > If you use a different model, you will probably have to adjust the values in `ModelConfig`.
 
-## Building Blocks
+# Building Blocks
 
 We define an `agent` with the following building blocks:
 
@@ -36,86 +36,16 @@ We define an `agent` with the following building blocks:
 - [Model](./#model)
 - [Tools](./#tools)
 
-Minimal example:
-
-```cpp
-#include "agent.h"
-#include "callbacks.h"
-#include "model.h"
-#include "tool.h"
-#include <iostream>
-
-class CalculatorTool : public agent_cpp::Tool {
-  public:
-    common_chat_tool get_definition() const override {
-        agent_cpp::json schema = {
-            {"type", "object"},
-            {"properties", {
-                {"a", {{"type", "number"}, {"description", "First operand"}}},
-                {"b", {{"type", "number"}, {"description", "Second operand"}}}
-            }},
-            {"required", {"a", "b"}}
-        };
-        return {"multiply", "Multiply two numbers", schema.dump()};
-    }
-
-    std::string get_name() const override { return "multiply"; }
-
-    std::string execute(const agent_cpp::json& args) override {
-        double a = args.at("a").get<double>();
-        double b = args.at("b").get<double>();
-        return std::to_string(a * b);
-    }
-};
-
-class LoggingCallback : public agent_cpp::Callback {
-  public:
-    void before_tool_execution(std::string& tool_name, std::string& args) override {
-        std::cerr << "[TOOL] Calling " << tool_name << " with " << args << "\n";
-    }
-};
-
-int main() {
-    auto model = agent_cpp::Model::create("model.gguf");
-
-    std::vector<std::unique_ptr<agent_cpp::Tool>> tools;
-    tools.push_back(std::make_unique<CalculatorTool>());
-
-    std::vector<std::unique_ptr<agent_cpp::Callback>> callbacks;
-    callbacks.push_back(std::make_unique<LoggingCallback>());
-
-    agent_cpp::Agent agent(
-        std::move(model),
-        std::move(tools),
-        std::move(callbacks),
-        "You are a helpful assistant."
-    );
-
-    std::vector<common_chat_msg> messages = {{"user", "What is 42 * 17?"}};
-    std::string response = agent.run_loop(messages);
-    std::cout << response << std::endl;
-}
-```
-
 ## Agent Loop
 
-In the current LLM (Large Language Models) world, and `agent` is usually a simple loop that intersperses `Model Calls` and `Tool Executions`, until a stop condition is met:
-
-```mermaid
-graph TD
-    User([User Input]) --> Model[Model Call]
-    Model --> Decision{Stop Condition Met?}
-    Decision -->|Yes| End([End])
-    Decision -->|No| Tool[Tool Execution]
-    Tool --> Model
-```
+In the current LLM (Large Language Models) world, and `agent` is usually a simple loop that intersperses `Model Calls` and `Tool Executions`, until a stop condition is met.
 
 > [!IMPORTANT]
-> There are different ways to implement the stop condition.
-> By default we let the agent decide by generating an output *without* tool executions.
+> There are different ways to implement stop conditions.
+> By default, we let the agent decide when to end the loop, by generating an output *without* tool executions.
 > You can implement additional stop conditions via callbacks.
 
-### Callbacks
+## Callbacks
 
 Callbacks allow you to hook into the agent lifecycle at specific points:
 
@@ -125,15 +55,13 @@ Callbacks allow you to hook into the agent lifecycle at specific points:
 
 Use callbacks for logging, context manipulation, human-in-the-loop approval, or error recovery.
 
-### Instructions
+## Instructions
 
 A system prompt that defines the agent's behavior and capabilities. Passed to the `Agent` constructor and automatically prepended to conversations.
 
-### Model
+## Model
 
 Encapsulates **local** LLM initialization and inference using [llama.cpp](https://github.com/ggml-org/llama.cpp). This is tightly coupled to llama.cpp and requires models in GGUF format.
-
-> **Architectural note:** The `Model` class is not backend-agnostic. It is built specifically for local inference with llama.cpp. There is no abstraction layer for swapping in cloud-based providers like OpenAI or Anthropic.
 
 Handles:
 
@@ -142,7 +70,7 @@ Handles:
 - Text generation with configurable sampling (temperature, top_p, top_k, etc.)
 - KV cache management for efficient prompt caching
 
-### Tools
+## Tools
 
 Tools extend the agent's capabilities beyond text generation. Each tool defines:
 
@@ -152,9 +80,11 @@ Tools extend the agent's capabilities beyond text generation. Each tool defines:
 
 When the model decides to use a tool, the agent parses the tool call, executes it, and feeds the result back into the conversation.
 
-## Usage
+# Usage
 
-### Option 1: FetchContent (Recommended)
+**C++ Standard:** Requires **C++17** or higher.
+
+## Option 1: FetchContent (Recommended)
 
 The easiest way to integrate agent.cpp into your CMake project:
 
@@ -171,7 +101,7 @@ add_executable(my_app main.cpp)
 target_link_libraries(my_app PRIVATE agent-cpp::agent)
 ```
 
-### Option 2: Installed Package
+## Option 2: Installed Package
 
 Build and install agent.cpp, then use `find_package`:
 
@@ -198,7 +128,7 @@ add_executable(my_app main.cpp)
 target_link_libraries(my_app PRIVATE agent-cpp::agent)
 ```
 
-### Option 3: Git Submodule
+## Option 3: Git Submodule
 
 Add agent.cpp as a submodule and include it directly:
 
@@ -225,35 +155,3 @@ cmake -B build -DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS
 ```
 
 For a complete list of build options and backend-specific instructions, see the [llama.cpp build documentation](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md).
-
-### Technical Details
-
-**C++ Standard:** Requires **C++17** or higher.
-
-**Thread Safety:** The `Agent` and `Model` classes are **not thread-safe**. A single `Agent` or `Model` instance should not be accessed concurrently from multiple threads.
-
-**Resource Sharing:** The library separates model weights from inference context to enable efficient VRAM usage:
-
-- **`ModelWeights`**: Holds the immutable model weights (the heavy VRAM consumer). Create once with `ModelWeights::create(path)` and share via `std::shared_ptr` across multiple `Model` instances.
-- **`Model`**: Holds a context (KV cache, sampler state) and a reference to shared weights. Each `Model` has its own conversation state.
-
-This architecture enables multiple concurrent agents sharing the same weights without loading them multiple times:
-
-```cpp
-// Load weights once (heavy VRAM usage)
-auto weights = agent_cpp::ModelWeights::create("model.gguf");
-
-// Create multiple models sharing the same weights (lightweight)
-auto validator_model = agent_cpp::Model::create_with_weights(weights);
-auto generator_model = agent_cpp::Model::create_with_weights(weights);
-
-// Each agent has independent conversation state
-Agent validator(validator_model, validator_tools);
-Agent generator(generator_model, generator_tools);
-```
-
-For simple single-agent use cases, `Model::create(path)` still works and handles everything internally.
-
-**Exceptions:** All exceptions derive from `agent_cpp::Error` (which extends `std::runtime_error`), allowing you to catch all library errors with a single `catch (const agent_cpp::Error&)` block.
-
-To handle tool errors gracefully without exceptions propagating, check the [`error_recovery_callback](./examples/shared) which converts tool errors into JSON results that the model can see and retry.

@@ -20,6 +20,10 @@ This example uses two callbacks:
 
 ## Building
 
+> [!IMPORTANT]
+> Check the [llama.cpp build documentation](https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md) to find
+> Cmake flags you might want to pass depending on your available hardware.
+
 ```bash
 cd examples/shell
 
