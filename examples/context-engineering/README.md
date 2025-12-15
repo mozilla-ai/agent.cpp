@@ -4,7 +4,15 @@ This example demonstrates how to use callbacks to modify the input messages (con
 
 ## Building Blocks
 
+### Callbacks
 
+This example uses three callbacks:
+
+- **ContextTrimmerCallback**: Implements `before_llm_call` to modify messages before they are sent to the LLM. It keeps only the N most recent tool call pairs (assistant message with tool_calls + tool responses), trimming older ones to prevent context window overflow during long conversations.
+
+- **LoggingCallback**: Shared callback from `examples/shared/` that logs tool execution information, displaying which tool is being called and its results.
+
+- **ErrorRecoveryCallback**: Shared callback from `examples/shared/` that converts tool execution errors into JSON results, allowing the agent to see errors and potentially retry or adjust.
 
 ### Tools
 

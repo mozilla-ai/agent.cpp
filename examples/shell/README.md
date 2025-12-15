@@ -12,6 +12,11 @@ This example exposes a single tool that can execute the given shell commands:
 
 ### Callbacks
 
+This example uses two callbacks:
+
+- **ShellConfirmationCallback**: Implements human-in-the-loop confirmation before executing shell commands. Before each command runs, it prompts the user to approve, reject, or edit the command. This is critical for security when executing arbitrary shell commands.
+
+- **ErrorRecoveryCallback**: Shared callback from `examples/shared/` that converts tool execution errors into JSON results, allowing the agent to see errors and potentially retry or adjust.
 
 ## Building
 
@@ -36,12 +41,11 @@ cmake --build build -j$(nproc)
 ## Usage
 
 ```bash
-./shell-example -m <path-to-model.gguf> [-d <working-directory>]
+./shell-example -m <path-to-model.gguf>
 ```
 
 Options:
 - `-m <path>` - Path to the GGUF model file (required)
-- `-d <path>` - Working directory for shell commands (default: current directory)
 
 ## Example
 

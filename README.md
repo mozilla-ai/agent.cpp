@@ -2,9 +2,20 @@
 
 Building blocks for **local** agents in C++.
 
-> **Note:** This library is designed for running small language models locally using [llama.cpp](https://github.com/ggml-org/llama.cpp). It does not support cloud-based APIs (OpenAI, Anthropic, etc.). If you want to call external LLM APIs, this is not the right fit.
+> [!NOTE]
+> This library is designed for running small language models locally using [llama.cpp](https://github.com/ggml-org/llama.cpp). If you want to call external LLM APIs, this is not the right fit.
 
 ## Examples
+
+You need to download a GGUF model in order to run the examples, the default model configuration is set for `granite-4.0-micro`:
+
+```bash
+wget https://huggingface.co/ibm-granite/granite-4.0-micro-GGUF/resolve/main/granite-4.0-micro-Q8_0.gguf
+```
+
+> [!IMPORTANT]
+> If you use a different model, you will probably have to adjust the values in `ModelConfig`.
+
 
 - **[Context Engineering](./examples/context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
 
