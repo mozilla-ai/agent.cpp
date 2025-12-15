@@ -7,16 +7,6 @@ Building blocks for **local** agents in C++.
 
 ## Examples
 
-You need to download a GGUF model in order to run the examples, the default model configuration is set for `granite-4.0-micro`:
-
-```bash
-wget https://huggingface.co/ibm-granite/granite-4.0-micro-GGUF/resolve/main/granite-4.0-micro-Q8_0.gguf
-```
-
-> [!IMPORTANT]
-> If you use a different model, you will probably have to adjust the values in `ModelConfig`.
-
-
 - **[Context Engineering](./examples/context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
 
 - **[Memory](./examples/memory/README.md)** - Use tools that allow an agent to store and retrieve relevant information across conversations.
@@ -26,6 +16,15 @@ wget https://huggingface.co/ibm-granite/granite-4.0-micro-GGUF/resolve/main/gran
 - **[Shell](./examples/shell/README.md)** - Allow an agent to write shell scripts to perform multiple actions at once. Demonstrates human-in-the-loop interactions via callbacks.
 
 - **[Tracing](./examples/tracing/README.md)** - Use callbacks to collect a record of the steps of the agent loop with OpenTelemetry.
+
+You need to download a GGUF model in order to run the examples, the default model configuration is set for `granite-4.0-micro`:
+
+```bash
+wget https://huggingface.co/ibm-granite/granite-4.0-micro-GGUF/resolve/main/granite-4.0-micro-Q8_0.gguf
+```
+
+> [!IMPORTANT]
+> If you use a different model, you will probably have to adjust the values in `ModelConfig`.
 
 ## Building Blocks
 
