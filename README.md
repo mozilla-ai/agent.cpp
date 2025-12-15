@@ -112,7 +112,7 @@ graph TD
 ```
 
 > [!IMPORTANT]
-> There are different ways to implement the stop condition. 
+> There are different ways to implement the stop condition.
 > By default we let the agent decide by generating an output *without* tool executions.
 > You can implement additional stop conditions via callbacks.
 
