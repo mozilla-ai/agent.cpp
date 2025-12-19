@@ -7,7 +7,6 @@
 #include "llama.h"
 #include "logging_callback.h"
 #include "model.h"
-#include "prompt_cache.h"
 #include "tool.h"
 #include <cstdio>
 #include <cstring>
@@ -326,7 +325,7 @@ main(int argc, char** argv)
 
     agent_cpp::Agent agent(
       std::move(model), std::move(tools), std::move(callbacks), instructions);
-    load_or_create_agent_cache(agent, "memory.cache");
+    agent.load_or_create_cache("memory.cache");
 
     printf("\nMemory Agent ready!\n");
     printf("   Try telling me your name, preferences, or ask to remember "

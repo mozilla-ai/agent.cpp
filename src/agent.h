@@ -48,6 +48,14 @@ class Agent
 
     // Get the model (for cache operations)
     [[nodiscard]] Model* get_model() const { return model.get(); }
+
+    // Load prompt cache from file, or create it if it doesn't exist
+    // Returns true on success, false on failure
+    bool load_or_create_cache(const std::string& cache_path);
+
+  private:
+    // Build the agent's prompt tokens (system message + tool definitions)
+    std::vector<llama_token> build_prompt_tokens();
 };
 
 } // namespace agent_cpp

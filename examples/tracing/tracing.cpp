@@ -8,7 +8,6 @@
 #include "llama.h"
 #include "logging_callback.h"
 #include "model.h"
-#include "prompt_cache.h"
 #include "tool.h"
 
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
@@ -284,7 +283,7 @@ main(int argc, char** argv)
     agent_cpp::Agent agent(
       std::move(model), std::move(tools), std::move(callbacks), instructions);
 
-    load_or_create_agent_cache(agent, "tracing.cache");
+    agent.load_or_create_cache("tracing.cache");
 
     printf("\nTracing Agent ready! Try asking me to do some calculations.\n");
     printf("   Type an empty line to quit.\n\n");

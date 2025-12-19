@@ -12,4 +12,3 @@ The [shared](./shared) directory contains reusable helper components used across
 | `chat_loop.h` | Interactive chat loop that reads user input from stdin and prints agent responses. Handles colored output for TTY terminals. |
 | `error_recovery_callback.h` | Callback that converts tool errors into JSON results, allowing the agent to see errors and retry gracefully instead of crashing. |
 | `logging_callback.h` | Callback that logs tool calls and their results to stderr. Useful for debugging and understanding agent behavior. |
-| `prompt_cache.h` | Utilities for building and caching the agent's system prompt tokens. Speeds up startup by reusing cached KV state. |

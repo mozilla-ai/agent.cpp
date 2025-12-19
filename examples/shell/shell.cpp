@@ -6,7 +6,6 @@
 #include "error_recovery_callback.h"
 #include "llama.h"
 #include "model.h"
-#include "prompt_cache.h"
 #include "tool.h"
 
 #include <algorithm>
@@ -223,8 +222,10 @@ main(int argc, char** argv)
 
     printf("Loading model...\n");
     std::shared_ptr<agent_cpp::Model> model;
+    auto model_config = agent_cpp::ModelConfig{};
+    model_config.n_ctx = 16384;
     try {
-        model = agent_cpp::Model::create(model_path);
+        model = agent_cpp::Model::create(model_path, model_config);
     } catch (const agent_cpp::ModelError& e) {
         fprintf(stderr, "error: %s\n", e.what());
         return 1;
@@ -246,7 +247,7 @@ main(int argc, char** argv)
     agent_cpp::Agent agent(
       std::move(model), std::move(tools), std::move(callbacks), instructions);
 
-    load_or_create_agent_cache(agent, "shell.cache");
+    agent.load_or_create_cache("shell.cache");
 
     printf("Shell Agent ready!\n");
     printf("   This agent can execute shell commands and scripts.\n");

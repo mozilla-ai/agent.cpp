@@ -8,7 +8,6 @@
 #include "llama.h"
 #include "logging_callback.h"
 #include "model.h"
-#include "prompt_cache.h"
 #include "tool.h"
 #include <algorithm>
 #include <cstdio>
@@ -210,7 +209,7 @@ main(int argc, char** argv)
     agent_cpp::Agent agent(
       std::move(model), std::move(tools), std::move(callbacks), instructions);
 
-    load_or_create_agent_cache(agent, "context-engineering.cache");
+    agent.load_or_create_cache("context-engineering.cache");
 
     printf("\nContext Engineering Demo ready!\n");
     printf("   Try to ask multiple calculations (i.e. 3+4, then 4 * 6) and");

@@ -8,7 +8,6 @@
 #include "llama.h"
 #include "logging_callback.h"
 #include "model.h"
-#include "prompt_cache.h"
 #include "tool.h"
 
 #include <cstdio>
@@ -190,7 +189,7 @@ class MainAgent
                                                     std::move(callbacks),
                                                     get_instructions());
 
-        load_or_create_agent_cache(*agent_, cache_path);
+        agent_->load_or_create_cache(cache_path);
     }
 
     agent_cpp::Agent& get() { return *agent_; }
