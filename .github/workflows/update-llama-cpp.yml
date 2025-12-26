@@ -102,5 +102,5 @@ jobs:
           --jq '.[0].url')
 
         if [ -n "$RUN_URL" ]; then
-          gh pr comment "$PR_URL" --body "🔨 **CI triggered manually:** $RUN_URL
+          gh pr comment "$PR_URL" --body "🔨 **CI triggered manually:** $RUN_URL"
         fi
