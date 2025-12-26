@@ -78,7 +78,7 @@ jobs:
 
         git push origin "$BRANCH_NAME"
 
-        gh pr create \
+        PR_URL=$(gh pr create \
           --title "Update llama.cpp submodule to ${{ steps.check.outputs.latest_short }}" \
           --body "This PR updates the llama.cpp submodule from \`${{ steps.check.outputs.current_short }}\` to \`${{ steps.check.outputs.latest_short }}\`.
 
@@ -87,7 +87,20 @@ jobs:
         ---
         *This PR was automatically created by the update-llama-cpp workflow.*" \
           --base main \
-          --head "$BRANCH_NAME"
+          --head "$BRANCH_NAME")
 
-        # Trigger CI workflow on the new branch
+        echo "Created PR: $PR_URL"
+
         gh workflow run "CMake on multiple platforms" --ref "$BRANCH_NAME"
+        sleep 5
+
+        RUN_URL=$(gh run list \
+          --workflow "CMake on multiple platforms" \
+          --branch "$BRANCH_NAME" \
+          --limit 1 \
+          --json url \
+          --jq '.[0].url')
+
+        if [ -n "$RUN_URL" ]; then
+          gh pr comment "$PR_URL" --body "🔨 **CI triggered manually:** $RUN_URL
+        fi
