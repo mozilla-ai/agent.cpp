@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(AGENT_CPP_BUILD_TESTS "Build agent.cpp tests" OFF)
+option(AGENT_CPP_BUILD_EXAMPLES "Build agent.cpp examples" OFF)
 option(AGENT_CPP_BUNDLED_LLAMA "Bundle llama.cpp (vs. find installed)" ON)
 
 set(LLAMA_CPP_DIR "" CACHE PATH "Path to existing llama.cpp directory (leave empty to use submodule)")
@@ -106,6 +107,66 @@ if(AGENT_CPP_BUILD_TESTS)
     endif()
 
     message(STATUS "Tests enabled. Run with: ctest or ./test_tool")
+endif()
+
+if(AGENT_CPP_BUILD_EXAMPLES)
+    # Shell example
+    add_executable(shell-example examples/shell/shell.cpp)
+    target_include_directories(shell-example PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/shared
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(shell-example PRIVATE agent model common llama)
+    target_compile_features(shell-example PRIVATE cxx_std_17)
+
+    # Memory example
+    add_executable(memory-example examples/memory/memory.cpp)
+    target_include_directories(memory-example PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/shared
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(memory-example PRIVATE agent model common llama)
+    target_compile_features(memory-example PRIVATE cxx_std_17)
+
+    # Multi-agent example
+    add_executable(multi-agent-example examples/multi-agent/multi-agent.cpp)
+    target_include_directories(multi-agent-example PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/shared
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(multi-agent-example PRIVATE agent model common llama)
+    target_compile_features(multi-agent-example PRIVATE cxx_std_17)
+
+    # Context engineering example
+    add_executable(context-engineering-example examples/context-engineering/context-engineering.cpp)
+    target_include_directories(context-engineering-example PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/shared
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(context-engineering-example PRIVATE agent model common llama)
+    target_compile_features(context-engineering-example PRIVATE cxx_std_17)
+
+    # Note: tracing-example is not included here as it requires additional
+    # dependencies (OpenTelemetry, protobuf, curl). Build it separately from
+    # examples/tracing/
+
+    message(STATUS "Examples enabled.")
 endif()
 
 option(AGENT_CPP_INSTALL "Generate install target" OFF)

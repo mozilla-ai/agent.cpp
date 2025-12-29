@@ -74,13 +74,20 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DAGENT_CPP_BUILD_TESTS=ON
-        -S ${{ github.workspace }}
+      # Examples use POSIX headers (unistd.h) and are only built on non-Windows platforms.
+      shell: bash
+      run: |
+        BUILD_EXAMPLES="OFF"
+        if [ "${{ matrix.os }}" != "windows-latest" ]; then
+          BUILD_EXAMPLES="ON"
+        fi
+        cmake -B ${{ steps.strings.outputs.build-output-dir }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} \
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DAGENT_CPP_BUILD_TESTS=ON \
+          -DAGENT_CPP_BUILD_EXAMPLES=$BUILD_EXAMPLES \
+          -S ${{ github.workspace }}
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -91,3 +98,16 @@ jobs:
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --build-config ${{ matrix.build_type }}
+
+    - name: Verify examples run
+      # Examples use POSIX headers (unistd.h) and are not available on Windows
+      if: matrix.os != 'windows-latest'
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      shell: bash
+      run: |
+        # Verify each example runs (they exit with code 1 when no model is provided, which is expected)
+        for example in shell-example memory-example multi-agent-example context-engineering-example; do
+          echo "Testing $example..."
+          ./$example || test $? -eq 1
+          echo "$example executed successfully (printed usage as expected)"
+        done
