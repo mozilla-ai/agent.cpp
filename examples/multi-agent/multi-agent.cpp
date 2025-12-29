@@ -116,7 +116,7 @@ class MathAgent
                                                     std::move(callbacks),
                                                     get_instructions());
 
-        load_or_create_agent_cache(*agent_, cache_path);
+        agent_->load_or_create_cache(cache_path);
     }
 
     std::string solve(const std::string& problem)
