@@ -5,7 +5,7 @@
 #include <sstream>
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
-#include <httplib.h>
+#include "httplib.h"
 
 namespace agent_cpp {
 
