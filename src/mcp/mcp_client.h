@@ -10,13 +10,9 @@
 
 #include "tool.h"
 
-// Forward declarations
+// Forward declaration
 namespace httplib {
 class Client;
-}
-
-namespace agent_cpp {
-class MCPClient;
 }
 
 namespace agent_cpp {
@@ -49,22 +45,16 @@ struct MCPToolResult
     bool is_error = false;
 };
 
-/// @brief Configuration options for MCPClient
 struct MCPClientConfig
 {
-    int connection_timeout_sec = 10; ///< Connection timeout in seconds
-    int read_timeout_sec = 30;       ///< Read timeout in seconds
-    int write_timeout_sec = 10;      ///< Write timeout in seconds
+    int connection_timeout_sec = 10;
+    int read_timeout_sec = 30;
+    int write_timeout_sec = 10;
 };
 
 class MCPClient : public std::enable_shared_from_this<MCPClient>
 {
   public:
-    /// @brief Create an MCPClient instance
-    /// @param url The MCP server URL
-    /// @param config Optional configuration for timeouts
-    /// @note Use this factory method instead of direct construction to enable
-    ///       proper lifetime management with MCPTool objects.
     static std::shared_ptr<MCPClient> create(
       const std::string& url,
       const MCPClientConfig& config = MCPClientConfig{});
@@ -114,4 +104,4 @@ class MCPClient : public std::enable_shared_from_this<MCPClient>
     json parse_response(const std::string& response);
 };
 
-}
+} // namespace agent_cpp

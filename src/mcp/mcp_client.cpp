@@ -11,15 +11,12 @@ namespace agent_cpp {
 
 namespace {
 
-// Parse URL into host and path components
 void
 parse_url(const std::string& url, std::string& host, std::string& path)
 {
-    // Find scheme end
     size_t scheme_end = url.find("://");
     size_t host_start = (scheme_end != std::string::npos) ? scheme_end + 3 : 0;
 
-    // Find path start
     size_t path_start = url.find('/', host_start);
     if (path_start != std::string::npos) {
         host = url.substr(0, path_start);
@@ -123,13 +120,11 @@ MCPClient::send_request(const std::string& method, const json& params)
                        res->body);
     }
 
-    // Extract session ID from response headers
     auto session_it = res->headers.find("Mcp-Session-Id");
     if (session_it != res->headers.end()) {
         session_id_ = session_it->second;
     }
 
-    // Get content type
     std::string content_type;
     auto ct_it = res->headers.find("Content-Type");
     if (ct_it != res->headers.end()) {
@@ -180,7 +175,6 @@ MCPClient::send_notification(const std::string& method, const json& params)
         headers.emplace("Mcp-Session-Id", session_id_);
     }
 
-    // Fire and forget for notifications
     http_client_->Post(path_, headers, request_body, "application/json");
 }
 
