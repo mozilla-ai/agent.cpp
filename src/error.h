@@ -71,6 +71,17 @@ class ToolArgumentError : public ToolError
     }
 };
 
+/// @brief Error during MCP client operations
+/// Thrown when MCP connection, initialization, or tool calls fail.
+class MCPError : public Error
+{
+  public:
+    explicit MCPError(const std::string& message)
+      : Error("MCP error: " + message)
+    {
+    }
+};
+
 /// @brief Exception to intentionally skip tool execution
 /// This is not an error condition - it's a control flow mechanism.
 /// Throw from before_tool_execution callback to skip a tool.

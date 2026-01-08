@@ -28,7 +28,7 @@ jobs:
     - name: Check for submodule updates
       id: check
       run: |
-        cd llama.cpp
+        cd deps/llama.cpp
 
         CURRENT_COMMIT=$(git rev-parse HEAD)
         echo "Current commit: $CURRENT_COMMIT"
@@ -69,11 +69,11 @@ jobs:
 
         git checkout -b "$BRANCH_NAME"
 
-        cd llama.cpp
+        cd deps/llama.cpp
         git checkout origin/master
-        cd ..
+        cd ../..
 
-        git add llama.cpp
+        git add deps/llama.cpp
         git commit -m "Update llama.cpp submodule to ${{ steps.check.outputs.latest_short }}"
 
         git push origin "$BRANCH_NAME"

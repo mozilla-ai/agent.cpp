@@ -1,3 +1,6 @@
 [submodule "llama.cpp"]
-	path = llama.cpp
+	path = deps/llama.cpp
 	url = https://github.com/ggerganov/llama.cpp.git
+[submodule "vendor/cpp-httplib"]
+	path = deps/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git

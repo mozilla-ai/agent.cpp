@@ -20,7 +20,7 @@ if(AGENT_CPP_BUNDLED_LLAMA)
         set(LLAMA_SOURCE_DIR "${LLAMA_CPP_DIR}")
         message(STATUS "Using custom llama.cpp from: ${LLAMA_SOURCE_DIR}")
     else()
-        set(LLAMA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp")
+        set(LLAMA_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/deps/llama.cpp")
         if(NOT EXISTS "${LLAMA_SOURCE_DIR}/CMakeLists.txt")
             message(FATAL_ERROR
                 "llama.cpp submodule not found at ${LLAMA_SOURCE_DIR}\n"
@@ -75,6 +75,30 @@ target_include_directories(agent
 target_link_libraries(agent PUBLIC model common llama)
 target_compile_features(agent PUBLIC cxx_std_17)
 
+# MCP Client library for connecting to MCP servers via HTTP
+option(AGENT_CPP_BUILD_MCP "Build MCP client (requires OpenSSL for HTTPS)" OFF)
+
+if(AGENT_CPP_BUILD_MCP)
+    find_package(OpenSSL REQUIRED)
+
+    add_library(mcp_client STATIC
+        src/mcp/mcp_client.cpp
+        src/mcp/mcp_tool.cpp
+    )
+    add_library(agent-cpp::mcp_client ALIAS mcp_client)
+    target_include_directories(mcp_client
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/cpp-httplib>
+            $<BUILD_INTERFACE:${LLAMA_SOURCE_DIR}/common>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agent-cpp>
+    )
+    target_link_libraries(mcp_client PUBLIC common OpenSSL::SSL OpenSSL::Crypto)
+    target_compile_features(mcp_client PUBLIC cxx_std_17)
+
+    message(STATUS "MCP client enabled (using cpp-httplib)")
+endif()
+
 if(AGENT_CPP_BUILD_TESTS)
     enable_testing()
 
@@ -97,6 +121,19 @@ if(AGENT_CPP_BUILD_TESTS)
 
     add_test(NAME ToolTests COMMAND test_tool)
     add_test(NAME CallbacksTests COMMAND test_callbacks)
+
+    if(AGENT_CPP_BUILD_MCP)
+        add_executable(test_mcp_client tests/test_mcp_client.cpp)
+        target_include_directories(test_mcp_client PRIVATE
+            src
+            tests
+            ${LLAMA_SOURCE_DIR}/common
+        )
+        target_link_libraries(test_mcp_client PRIVATE mcp_client common)
+        target_compile_features(test_mcp_client PRIVATE cxx_std_17)
+
+        add_test(NAME MCPClientTests COMMAND test_mcp_client)
+    endif()
 
     # On Windows, DLLs are placed in the bin/ directory by llama.cpp
     # We need to add this directory to PATH so tests can find the DLLs
@@ -162,6 +199,21 @@ if(AGENT_CPP_BUILD_EXAMPLES)
     target_link_libraries(context-engineering-example PRIVATE agent model common llama)
     target_compile_features(context-engineering-example PRIVATE cxx_std_17)
 
+    # MCP client example (requires MCP support)
+    if(AGENT_CPP_BUILD_MCP)
+        add_executable(mcp-example examples/mcp/mcp.cpp)
+        target_include_directories(mcp-example PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+            ${CMAKE_CURRENT_SOURCE_DIR}/examples/shared
+            ${LLAMA_SOURCE_DIR}/common
+            ${LLAMA_SOURCE_DIR}/ggml/include
+            ${LLAMA_SOURCE_DIR}/include
+            ${LLAMA_SOURCE_DIR}/vendor
+        )
+        target_link_libraries(mcp-example PRIVATE agent model mcp_client common llama)
+        target_compile_features(mcp-example PRIVATE cxx_std_17)
+    endif()
+
     # Note: tracing-example is not included here as it requires additional
     # dependencies (OpenTelemetry, protobuf, curl). Build it separately from
     # examples/tracing/
@@ -176,17 +228,29 @@ if(AGENT_CPP_INSTALL)
     include(CMakePackageConfigHelpers)
 
     # Install public headers
-    install(FILES
+    set(INSTALL_HEADERS
         src/agent.h
         src/callbacks.h
         src/error.h
         src/model.h
         src/tool.h
+    )
+
+    if(AGENT_CPP_BUILD_MCP)
+        list(APPEND INSTALL_HEADERS src/mcp/mcp_client.h src/mcp/mcp_tool.h)
+    endif()
+
+    install(FILES ${INSTALL_HEADERS}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/agent-cpp
     )
 
     # Install libraries with export set
-    install(TARGETS agent model
+    set(INSTALL_TARGETS agent model)
+    if(AGENT_CPP_BUILD_MCP)
+        list(APPEND INSTALL_TARGETS mcp_client)
+    endif()
+
+    install(TARGETS ${INSTALL_TARGETS}
         EXPORT agent-cpp-targets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

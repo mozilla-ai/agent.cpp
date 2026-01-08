@@ -26,7 +26,7 @@ jobs:
     - name: Install clang tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang-format-14 clang-tidy-14
+        sudo apt-get install -y clang-format-14 clang-tidy-14 libssl-dev
         sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-14 100
         sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-14 100
 
@@ -38,7 +38,7 @@ jobs:
         clang-tidy --version
 
     - name: Configure CMake
-      run: cmake -B build -S .
+      run: cmake -B build -S . -DAGENT_CPP_BUILD_MCP=ON
 
     - name: Run pre-commit
       run: pre-commit run --all-files --show-diff-on-failure --verbose
