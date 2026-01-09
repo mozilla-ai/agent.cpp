@@ -112,6 +112,10 @@ Model::initialize_context(const ModelConfig& model_config)
     llama_context_params ctx_params = llama_context_default_params();
     ctx_params.n_ctx = model_config.n_ctx;
     ctx_params.n_batch = model_config.n_batch;
+    ctx_params.n_threads = model_config.n_threads;
+    ctx_params.n_threads_batch = model_config.n_threads_batch;
+    ctx_params.type_k = model_config.cache_type_k;
+    ctx_params.type_v = model_config.cache_type_v;
 
     ctx_ = llama_init_from_model(weights_->get_model(), ctx_params);
     if (ctx_ == nullptr) {

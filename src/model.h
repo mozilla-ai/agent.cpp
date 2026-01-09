@@ -2,10 +2,12 @@
 
 #include "chat.h"
 #include "llama.h"
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+#include <thread>
 
 namespace agent_cpp {
 
@@ -20,11 +22,17 @@ struct ModelConfig
     int top_k = 0;
     float temp = 0.0F;
     uint32_t seed = LLAMA_DEFAULT_SEED;
-    // Chat format for parsing tool calls. When nullopt (default), the format
-    // is auto-detected from the model's chat template.
+    // When nullopt (default), the format is auto-detected from the model's chat
+    // template.
     std::optional<common_chat_format> chat_format = std::nullopt;
     int n_ctx = 10240;
     int n_batch = -1;
+    int n_threads =
+      static_cast<int>(std::max(1u, std::thread::hardware_concurrency() - 1));
+    int n_threads_batch =
+      static_cast<int>(std::max(1u, std::thread::hardware_concurrency() - 1));
+    ggml_type cache_type_k = GGML_TYPE_F16;
+    ggml_type cache_type_v = GGML_TYPE_F16;
 };
 
 // Forward declaration
