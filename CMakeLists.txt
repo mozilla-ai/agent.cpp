@@ -99,6 +99,30 @@ if(AGENT_CPP_BUILD_MCP)
     message(STATUS "MCP client enabled (using cpp-httplib)")
 endif()
 
+# OAuth library for handling OAuth 2.0 authorization flows
+option(AGENT_CPP_BUILD_OAUTH "Build OAuth client (requires OpenSSL)" OFF)
+
+if(AGENT_CPP_BUILD_OAUTH)
+    find_package(OpenSSL REQUIRED)
+
+    add_library(oauth STATIC
+        src/oauth/oauth.cpp
+        src/oauth/token_storage.cpp
+    )
+    add_library(agent-cpp::oauth ALIAS oauth)
+    target_include_directories(oauth
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/deps/cpp-httplib>
+            $<BUILD_INTERFACE:${LLAMA_SOURCE_DIR}/common>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agent-cpp>
+    )
+    target_link_libraries(oauth PUBLIC common OpenSSL::SSL OpenSSL::Crypto)
+    target_compile_features(oauth PUBLIC cxx_std_17)
+
+    message(STATUS "OAuth client enabled (using cpp-httplib)")
+endif()
+
 if(AGENT_CPP_BUILD_TESTS)
     enable_testing()
 
