@@ -183,7 +183,7 @@ Model::generate(const std::vector<common_chat_msg>& messages,
 
     std::string response = generate_from_tokens(prompt_tokens, callback);
 
-    common_chat_syntax syntax;
+    common_chat_parser_params syntax;
     // Use explicitly configured format, or fall back to auto-detected format
     syntax.format = config_.chat_format.value_or(params.format);
     syntax.parse_tool_calls = true;
