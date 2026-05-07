@@ -5,6 +5,7 @@
 #include "error.h"
 #include "error_recovery_callback.h"
 #include "llama.h"
+#include "log.h"
 #include "logging_callback.h"
 #include "model.h"
 #include "tool.h"
@@ -258,6 +259,17 @@ print_usage(int /*unused*/, char** argv)
 int
 main(int argc, char** argv)
 {
+    llama_log_set(
+      [](enum ggml_log_level /*level*/,
+         const char* /*text*/,
+         void* /*user_data*/) {
+          // suppress all llama.cpp log output
+      },
+      nullptr);
+
+    // suppress common library warnings (e.g. template tool support)
+    common_log_set_verbosity_thold(LOG_LEVEL_ERROR);
+
     std::string model_path;
     std::string memory_file = "memory.json";
 
