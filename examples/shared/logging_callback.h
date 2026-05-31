@@ -4,7 +4,13 @@
 #include "tool_result.h"
 #include <cstdio>
 #include <string>
+
+#if _WIN32
+#include <io.h>
+#define isatty _isatty
+#else
 #include <unistd.h>
+#endif // _WIN32
 
 // Logging callback to display tool execution information.
 // Shared across examples to provide consistent tool call logging.
@@ -47,3 +53,7 @@ class LoggingCallback : public agent_cpp::Callback
         }
     }
 };
+
+#if _WIN32
+#undef isatty
+#endif // _WIN32

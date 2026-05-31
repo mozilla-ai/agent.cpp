@@ -15,7 +15,16 @@
 #include <iostream>
 #include <memory>
 #include <string>
+
+#if _WIN32
+#include <io.h>
+#include <stdio.h>
+#define isatty _isatty
+#define popen _popen
+#define pclose _pclose
+#else
 #include <unistd.h>
+#endif // _WIN32
 
 using agent_cpp::json;
 using agent_cpp::ToolExecutionSkipped;

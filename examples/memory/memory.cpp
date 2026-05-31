@@ -15,7 +15,13 @@
 #include <iostream>
 #include <map>
 #include <string>
+
+#if _WIN32
+#include <io.h>
+#define isatty _isatty
+#else
 #include <unistd.h>
+#endif // _WIN32
 
 using agent_cpp::json;
 

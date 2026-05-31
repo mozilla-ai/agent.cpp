@@ -15,7 +15,13 @@
 #include <functional>
 #include <iostream>
 #include <string>
+
+#if _WIN32
+#include <io.h>
+#define isatty _isatty
+#else
 #include <unistd.h>
+#endif // _WIN32
 
 static constexpr size_t DEFAULT_MAX_TOOL_CALLS = 1;
 

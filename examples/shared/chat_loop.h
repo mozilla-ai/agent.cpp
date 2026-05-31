@@ -5,8 +5,14 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
-#include <unistd.h>
 #include <vector>
+
+#if _WIN32
+#include <io.h>
+#define isatty _isatty
+#else
+#include <unistd.h>
+#endif // _WIN32
 
 // Run an interactive chat loop with the given agent.
 // Reads user input from stdin and prints agent responses to stdout.
@@ -48,3 +54,7 @@ run_chat_loop(agent_cpp::Agent& agent)
 
     printf("\n👋 Goodbye!\n");
 }
+
+#if _WIN32
+#undef isatty
+#endif // _WIN32
