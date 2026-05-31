@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#if _WIN32
+#ifdef _WIN32
 #include <io.h>
 #define isatty _isatty
 #else
@@ -55,6 +55,6 @@ run_chat_loop(agent_cpp::Agent& agent)
     printf("\n👋 Goodbye!\n");
 }
 
-#if _WIN32
+#ifdef _WIN32
 #undef isatty
 #endif // _WIN32

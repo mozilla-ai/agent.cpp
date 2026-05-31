@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <string>
 
-#if _WIN32
+#ifdef _WIN32
 #include <io.h>
 #define isatty _isatty
 #else
@@ -54,6 +54,6 @@ class LoggingCallback : public agent_cpp::Callback
     }
 };
 
-#if _WIN32
+#ifdef _WIN32
 #undef isatty
 #endif // _WIN32

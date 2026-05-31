@@ -16,7 +16,7 @@
 #include <memory>
 #include <string>
 
-#if _WIN32
+#ifdef _WIN32
 #include <io.h>
 #include <stdio.h>
 #define isatty _isatty
