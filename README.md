@@ -9,6 +9,8 @@ Building blocks for **local** agents in C++.
 
 - **[Context Engineering](./examples/context-engineering/README.md)** - Use callbacks to manipulate the context between iterations of the agent loop.
 
+- **[Grammar](./examples/grammar/README.md)** - Constrain model output to a GBNF grammar so every response matches a fixed structure.
+
 - **[Memory](./examples/memory/README.md)** - Use tools that allow an agent to store and retrieve relevant information across conversations.
 
 - **[Multi-Agent](./examples/multi-agent/README.md)** - Build a multi-agent system with weight sharing where a main agent delegates to specialized sub-agents.
@@ -69,6 +71,18 @@ Handles:
 - Chat template application and tokenization
 - Text generation with configurable sampling (temperature, top_p, top_k, etc.)
 - KV cache management for efficient prompt caching
+
+### Grammar-constrained output
+
+Model output can be constrained to a [GBNF grammar](https://github.com/ggml-org/llama.cpp/blob/master/grammars/README.md) to enforce structured formats (e.g. JSON, yes/no answers):
+
+```cpp
+ModelConfig config;
+config.grammar = agent_cpp::load_grammar_file("path/to/grammar.gbnf");
+config.grammar_root = "root"; // optional, defaults to "root"
+```
+
+See the [Grammar example](./examples/grammar/README.md) for a full working demo.
 
 ## Tools
 

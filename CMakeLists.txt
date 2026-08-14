@@ -131,6 +131,18 @@ if(AGENT_CPP_BUILD_TESTS)
     target_link_libraries(test_tool PRIVATE common llama)
     target_compile_features(test_tool PRIVATE cxx_std_17)
 
+    add_executable(test_grammar tests/test_grammar.cpp)
+    target_include_directories(test_grammar PRIVATE
+        src
+        tests
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(test_grammar PRIVATE model common llama)
+    target_compile_features(test_grammar PRIVATE cxx_std_17)
+
     add_executable(test_callbacks tests/test_callbacks.cpp)
     target_include_directories(test_callbacks PRIVATE
         src
@@ -145,6 +157,7 @@ if(AGENT_CPP_BUILD_TESTS)
 
     add_test(NAME ToolTests COMMAND test_tool)
     add_test(NAME CallbacksTests COMMAND test_callbacks)
+    add_test(NAME GrammarTests COMMAND test_grammar)
 
     if(AGENT_CPP_BUILD_MCP)
         add_executable(test_mcp_client tests/test_mcp_client.cpp)
@@ -162,7 +175,7 @@ if(AGENT_CPP_BUILD_TESTS)
     # On Windows, DLLs are placed in the bin/ directory by llama.cpp
     # We need to add this directory to PATH so tests can find the DLLs
     if(WIN32)
-        set_tests_properties(ToolTests CallbacksTests PROPERTIES
+        set_tests_properties(ToolTests CallbacksTests GrammarTests PROPERTIES
             ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/bin\;$ENV{PATH}"
         )
     endif()
@@ -222,6 +235,19 @@ if(AGENT_CPP_BUILD_EXAMPLES)
     )
     target_link_libraries(context-engineering-example PRIVATE agent model common llama)
     target_compile_features(context-engineering-example PRIVATE cxx_std_17)
+
+    # Grammar example
+    add_executable(grammar-example examples/grammar/grammar.cpp)
+    target_include_directories(grammar-example PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/shared
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(grammar-example PRIVATE agent model common llama)
+    target_compile_features(grammar-example PRIVATE cxx_std_17)
 
     # MCP client example (requires MCP support)
     if(AGENT_CPP_BUILD_MCP)
