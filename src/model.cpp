@@ -13,8 +13,7 @@ load_grammar_file(const std::string& grammar_path)
 {
     std::ifstream file(grammar_path);
     if (!file) {
-        throw ModelError("failed to open grammar file '" + grammar_path +
-                         "'");
+        throw ModelError("failed to open grammar file '" + grammar_path + "'");
     }
 
     std::ostringstream contents;
@@ -157,7 +156,8 @@ Model::initialize_context(const ModelConfig& model_config)
         }
         // Add grammar before the rest of the sampler chain
         llama_sampler_chain_add(sampler_, grammar_sampler);
-        // Keep a non-owning reference so we can reset this sampler between turns
+        // Keep a non-owning reference so we can reset this sampler between
+        // turns
         grammar_sampler_ = grammar_sampler;
     }
 
