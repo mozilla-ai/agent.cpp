@@ -28,7 +28,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <unistd.h>
 #include <vector>
 
 namespace trace_api = opentelemetry::trace;

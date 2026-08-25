@@ -6,6 +6,7 @@
 #include "error_recovery_callback.h"
 #include "llama.h"
 #include "model.h"
+#include "platform_compat.h"
 #include "tool.h"
 
 #include <algorithm>
@@ -15,7 +16,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <unistd.h>
 
 using agent_cpp::json;
 using agent_cpp::ToolExecutionSkipped;

@@ -15,7 +15,6 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <unistd.h>
 
 using agent_cpp::json;
 

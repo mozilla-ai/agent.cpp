@@ -2,10 +2,10 @@
 
 #include "agent.h"
 #include "chat.h"
+#include "platform_compat.h"
 #include <cstdio>
 #include <iostream>
 #include <string>
-#include <unistd.h>
 #include <vector>
 
 // Run an interactive chat loop with the given agent.

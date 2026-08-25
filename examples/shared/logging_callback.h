@@ -1,10 +1,10 @@
 #pragma once
 
 #include "callbacks.h"
+#include "platform_compat.h"
 #include "tool_result.h"
 #include <cstdio>
 #include <string>
-#include <unistd.h>
 
 // Logging callback to display tool execution information.
 // Shared across examples to provide consistent tool call logging.

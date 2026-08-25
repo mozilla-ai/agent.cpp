@@ -8,6 +8,7 @@
 #include "llama.h"
 #include "logging_callback.h"
 #include "model.h"
+#include "platform_compat.h"
 #include "tool.h"
 #include <algorithm>
 #include <cstdio>
@@ -15,7 +16,6 @@
 #include <functional>
 #include <iostream>
 #include <string>
-#include <unistd.h>
 
 static constexpr size_t DEFAULT_MAX_TOOL_CALLS = 1;
 
