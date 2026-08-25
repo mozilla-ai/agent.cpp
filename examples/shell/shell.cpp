@@ -6,6 +6,7 @@
 #include "error_recovery_callback.h"
 #include "llama.h"
 #include "model.h"
+#include "platform_compat.h"
 #include "tool.h"
 
 #include <algorithm>
@@ -15,16 +16,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-
-#ifdef _WIN32
-#include <io.h>
-#include <stdio.h>
-#define isatty _isatty
-#define popen _popen
-#define pclose _pclose
-#else
-#include <unistd.h>
-#endif // _WIN32
 
 using agent_cpp::json;
 using agent_cpp::ToolExecutionSkipped;

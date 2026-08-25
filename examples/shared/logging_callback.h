@@ -1,16 +1,10 @@
 #pragma once
 
 #include "callbacks.h"
+#include "platform_compat.h"
 #include "tool_result.h"
 #include <cstdio>
 #include <string>
-
-#ifdef _WIN32
-#include <io.h>
-#define isatty _isatty
-#else
-#include <unistd.h>
-#endif // _WIN32
 
 // Logging callback to display tool execution information.
 // Shared across examples to provide consistent tool call logging.
@@ -53,7 +47,3 @@ class LoggingCallback : public agent_cpp::Callback
         }
     }
 };
-
-#ifdef _WIN32
-#undef isatty
-#endif // _WIN32
