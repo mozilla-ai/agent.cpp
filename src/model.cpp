@@ -18,7 +18,12 @@ load_grammar_file(const std::string& grammar_path)
 
     std::ostringstream contents;
     contents << file.rdbuf();
-    return contents.str();
+
+    std::string grammar = contents.str();
+    if (grammar.empty()) {
+        throw ModelError("grammar file '" + grammar_path + "' is empty");
+    }
+    return grammar;
 }
 
 std::shared_ptr<ModelWeights>

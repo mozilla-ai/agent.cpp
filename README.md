@@ -82,6 +82,8 @@ config.grammar = agent_cpp::load_grammar_file("path/to/grammar.gbnf");
 config.grammar_root = "root"; // optional, defaults to "root"
 ```
 
+A grammar constrains every response, including the ones the agent would use to call a tool. If the grammar does not allow the tool-call format, the agent cannot call tools, so grammars are best used with agents that only need to produce text.
+
 See the [Grammar example](./examples/grammar/README.md) for a full working demo.
 
 ## Tools

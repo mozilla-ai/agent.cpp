@@ -39,7 +39,7 @@ struct ModelConfig
 };
 
 /// Reads a GBNF file into a string for ModelConfig::grammar
-/// @throws ModelError if the file cannot be opened
+/// @throws ModelError if the file cannot be opened or is empty
 std::string
 load_grammar_file(const std::string& grammar_path);
 

@@ -24,7 +24,7 @@ model_config.grammar = agent_cpp::load_grammar_file("sentiment.gbnf");
 model_config.grammar_root = "root"; // optional, this is the default
 ```
 
-No tools are used in this example. The grammar alone is enough to constrain every response.
+No tools are used in this example. The grammar alone is enough to constrain every response, and it would also block any tool call the agent tried to make: the grammar applies to every token the model generates, so a tool-call format that the grammar does not allow can never be produced.
 
 ## Building
 
