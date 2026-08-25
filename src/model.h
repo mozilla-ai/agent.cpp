@@ -33,7 +33,15 @@ struct ModelConfig
       static_cast<int>(std::max(1u, std::thread::hardware_concurrency() - 1));
     ggml_type cache_type_k = GGML_TYPE_F16;
     ggml_type cache_type_v = GGML_TYPE_F16;
+    // Optional GBNF grammar and root rule name
+    std::string grammar;
+    std::string grammar_root = "root";
 };
+
+/// Reads a GBNF file into a string for ModelConfig::grammar
+/// @throws ModelError if the file cannot be opened or is empty
+std::string
+load_grammar_file(const std::string& grammar_path);
 
 // Forward declaration
 class Model;
@@ -184,6 +192,9 @@ class Model
     std::shared_ptr<ModelWeights> weights_;
     llama_context* ctx_ = nullptr;
     llama_sampler* sampler_ = nullptr;
+    // Non-owning pointer to the grammar sampler in sampler_'s chain
+    // Reset this one between turns without resetting the rest of the chain
+    llama_sampler* grammar_sampler_ = nullptr;
     std::vector<llama_token> processed_tokens_; // Track tokens in KV cache
     int n_past_ = 0;                            // Track position in KV cache
     ModelConfig config_;

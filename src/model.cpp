@@ -3,8 +3,28 @@
 #include "error.h"
 #include <algorithm>
 #include <cstdio>
+#include <fstream>
+#include <sstream>
 
 namespace agent_cpp {
+
+std::string
+load_grammar_file(const std::string& grammar_path)
+{
+    std::ifstream file(grammar_path);
+    if (!file) {
+        throw ModelError("failed to open grammar file '" + grammar_path + "'");
+    }
+
+    std::ostringstream contents;
+    contents << file.rdbuf();
+
+    std::string grammar = contents.str();
+    if (grammar.empty()) {
+        throw ModelError("grammar file '" + grammar_path + "' is empty");
+    }
+    return grammar;
+}
 
 std::shared_ptr<ModelWeights>
 ModelWeights::create(const std::string& model_path)
@@ -70,12 +90,14 @@ Model::Model(Model&& other) noexcept
   : weights_(std::move(other.weights_))
   , ctx_(other.ctx_)
   , sampler_(other.sampler_)
+  , grammar_sampler_(other.grammar_sampler_)
   , processed_tokens_(std::move(other.processed_tokens_))
   , n_past_(other.n_past_)
   , config_(other.config_)
 {
     other.ctx_ = nullptr;
     other.sampler_ = nullptr;
+    other.grammar_sampler_ = nullptr;
     other.n_past_ = 0;
 }
 
@@ -93,12 +115,14 @@ Model::operator=(Model&& other) noexcept
         weights_ = std::move(other.weights_);
         ctx_ = other.ctx_;
         sampler_ = other.sampler_;
+        grammar_sampler_ = other.grammar_sampler_;
         processed_tokens_ = std::move(other.processed_tokens_);
         n_past_ = other.n_past_;
         config_ = other.config_;
 
         other.ctx_ = nullptr;
         other.sampler_ = nullptr;
+        other.grammar_sampler_ = nullptr;
         other.n_past_ = 0;
     }
     return *this;
@@ -123,6 +147,25 @@ Model::initialize_context(const ModelConfig& model_config)
     }
 
     sampler_ = llama_sampler_chain_init(llama_sampler_chain_default_params());
+
+    if (!model_config.grammar.empty()) {
+        llama_sampler* grammar_sampler =
+          llama_sampler_init_grammar(weights_->get_vocab(),
+                                     model_config.grammar.c_str(),
+                                     model_config.grammar_root.c_str());
+        if (grammar_sampler == nullptr) {
+            llama_sampler_free(sampler_);
+            sampler_ = nullptr;
+            throw ModelError("failed to parse GBNF grammar (root rule '" +
+                             model_config.grammar_root + "')");
+        }
+        // Add grammar before the rest of the sampler chain
+        llama_sampler_chain_add(sampler_, grammar_sampler);
+        // Keep a non-owning reference so we can reset this sampler between
+        // turns
+        grammar_sampler_ = grammar_sampler;
+    }
+
     llama_sampler_chain_add(sampler_,
                             llama_sampler_init_top_k(model_config.top_k));
     llama_sampler_chain_add(sampler_,
@@ -241,6 +284,12 @@ Model::generate_from_tokens(const std::vector<llama_token>& all_tokens,
         processed_tokens_.insert(
           processed_tokens_.end(), batch_tokens.begin(), batch_tokens.end());
         i += batch_size;
+    }
+
+    // Reset the grammar sampler before each turn so a finished grammar does
+    // not force EOS on the next call.
+    if (grammar_sampler_ != nullptr) {
+        llama_sampler_reset(grammar_sampler_);
     }
 
     llama_token new_token_id{};
