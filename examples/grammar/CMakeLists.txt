@@ -18,7 +18,7 @@ target_include_directories(grammar-example PRIVATE
     ${LLAMA_SOURCE_DIR}/vendor
 )
 
-target_link_libraries(grammar-example PRIVATE agent-cpp::agent common llama)
+target_link_libraries(grammar-example PRIVATE agent-cpp::agent ${LLAMA_COMMON_TARGET} llama)
 target_compile_features(grammar-example PRIVATE cxx_std_17)
 
 message(STATUS "Grammar example configured.")

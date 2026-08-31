@@ -18,7 +18,7 @@ target_include_directories(multi-agent-example PRIVATE
     ${LLAMA_SOURCE_DIR}/vendor
 )
 
-target_link_libraries(multi-agent-example PRIVATE agent-cpp::agent common llama)
+target_link_libraries(multi-agent-example PRIVATE agent-cpp::agent ${LLAMA_COMMON_TARGET} llama)
 target_compile_features(multi-agent-example PRIVATE cxx_std_17)
 
 message(STATUS "Multi-agent example configured.")
