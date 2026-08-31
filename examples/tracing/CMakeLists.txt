@@ -62,7 +62,7 @@ target_include_directories(tracing-example PRIVATE
 
 target_link_libraries(tracing-example PRIVATE
     agent-cpp::agent
-    common
+    ${LLAMA_COMMON_TARGET}
     llama
     opentelemetry_trace
     opentelemetry_exporter_otlp_http

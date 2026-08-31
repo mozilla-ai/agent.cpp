@@ -42,9 +42,20 @@ if(AGENT_CPP_BUNDLED_LLAMA)
     set(LLAMA_LLGUIDANCE OFF CACHE BOOL "" FORCE)
 
     add_subdirectory(${LLAMA_SOURCE_DIR} ${CMAKE_BINARY_DIR}/llama.cpp)
+
+    # Recent llama.cpp renamed the `common` target to `llama-common`.
+    # Support both so older pinned versions keep working. Cached so that the
+    # standalone example projects (which add this directory as a subdirectory)
+    # can use it too.
+    if(TARGET llama-common)
+        set(LLAMA_COMMON_TARGET llama-common CACHE INTERNAL "llama.cpp common target name")
+    else()
+        set(LLAMA_COMMON_TARGET common CACHE INTERNAL "llama.cpp common target name")
+    endif()
 else()
     # Use system-installed llama.cpp
     find_package(llama REQUIRED)
+    set(LLAMA_COMMON_TARGET common CACHE INTERNAL "llama.cpp common target name")
     message(STATUS "Using system-installed llama.cpp")
 endif()
 
@@ -58,7 +69,7 @@ target_include_directories(model
         $<BUILD_INTERFACE:${LLAMA_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agent-cpp>
 )
-target_link_libraries(model PUBLIC common llama)
+target_link_libraries(model PUBLIC ${LLAMA_COMMON_TARGET} llama)
 target_compile_features(model PUBLIC cxx_std_17)
 
 add_library(agent STATIC src/agent.cpp)
@@ -72,7 +83,7 @@ target_include_directories(agent
         $<BUILD_INTERFACE:${LLAMA_SOURCE_DIR}/vendor>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agent-cpp>
 )
-target_link_libraries(agent PUBLIC model common llama)
+target_link_libraries(agent PUBLIC model ${LLAMA_COMMON_TARGET} llama)
 target_compile_features(agent PUBLIC cxx_std_17)
 
 # MCP Client library for connecting to MCP servers via HTTP
@@ -93,7 +104,7 @@ if(AGENT_CPP_BUILD_MCP)
             $<BUILD_INTERFACE:${LLAMA_SOURCE_DIR}/common>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agent-cpp>
     )
-    target_link_libraries(mcp_client PUBLIC common OpenSSL::SSL OpenSSL::Crypto)
+    target_link_libraries(mcp_client PUBLIC ${LLAMA_COMMON_TARGET} OpenSSL::SSL OpenSSL::Crypto)
     target_compile_features(mcp_client PUBLIC cxx_std_17)
 
     message(STATUS "MCP client enabled (using cpp-httplib)")
@@ -117,7 +128,7 @@ if(AGENT_CPP_BUILD_OAUTH)
             $<BUILD_INTERFACE:${LLAMA_SOURCE_DIR}/common>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/agent-cpp>
     )
-    target_link_libraries(oauth PUBLIC common OpenSSL::SSL OpenSSL::Crypto)
+    target_link_libraries(oauth PUBLIC ${LLAMA_COMMON_TARGET} OpenSSL::SSL OpenSSL::Crypto)
     target_compile_features(oauth PUBLIC cxx_std_17)
 
     message(STATUS "OAuth client enabled (using cpp-httplib)")
@@ -128,7 +139,7 @@ if(AGENT_CPP_BUILD_TESTS)
 
     add_executable(test_tool tests/test_tool.cpp)
     target_include_directories(test_tool PRIVATE src tests)
-    target_link_libraries(test_tool PRIVATE common llama)
+    target_link_libraries(test_tool PRIVATE ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(test_tool PRIVATE cxx_std_17)
 
     add_executable(test_grammar tests/test_grammar.cpp)
@@ -140,7 +151,7 @@ if(AGENT_CPP_BUILD_TESTS)
         ${LLAMA_SOURCE_DIR}/include
         ${LLAMA_SOURCE_DIR}/vendor
     )
-    target_link_libraries(test_grammar PRIVATE model common llama)
+    target_link_libraries(test_grammar PRIVATE model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(test_grammar PRIVATE cxx_std_17)
 
     add_executable(test_callbacks tests/test_callbacks.cpp)
@@ -152,7 +163,7 @@ if(AGENT_CPP_BUILD_TESTS)
         ${LLAMA_SOURCE_DIR}/include
         ${LLAMA_SOURCE_DIR}/vendor
     )
-    target_link_libraries(test_callbacks PRIVATE agent model common llama)
+    target_link_libraries(test_callbacks PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(test_callbacks PRIVATE cxx_std_17)
 
     add_test(NAME ToolTests COMMAND test_tool)
@@ -166,7 +177,7 @@ if(AGENT_CPP_BUILD_TESTS)
             tests
             ${LLAMA_SOURCE_DIR}/common
         )
-        target_link_libraries(test_mcp_client PRIVATE mcp_client common)
+        target_link_libraries(test_mcp_client PRIVATE mcp_client ${LLAMA_COMMON_TARGET})
         target_compile_features(test_mcp_client PRIVATE cxx_std_17)
 
         add_test(NAME MCPClientTests COMMAND test_mcp_client)
@@ -194,7 +205,7 @@ if(AGENT_CPP_BUILD_EXAMPLES)
         ${LLAMA_SOURCE_DIR}/include
         ${LLAMA_SOURCE_DIR}/vendor
     )
-    target_link_libraries(shell-example PRIVATE agent model common llama)
+    target_link_libraries(shell-example PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(shell-example PRIVATE cxx_std_17)
 
     # Memory example
@@ -207,7 +218,7 @@ if(AGENT_CPP_BUILD_EXAMPLES)
         ${LLAMA_SOURCE_DIR}/include
         ${LLAMA_SOURCE_DIR}/vendor
     )
-    target_link_libraries(memory-example PRIVATE agent model common llama)
+    target_link_libraries(memory-example PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(memory-example PRIVATE cxx_std_17)
 
     # Multi-agent example
@@ -220,7 +231,7 @@ if(AGENT_CPP_BUILD_EXAMPLES)
         ${LLAMA_SOURCE_DIR}/include
         ${LLAMA_SOURCE_DIR}/vendor
     )
-    target_link_libraries(multi-agent-example PRIVATE agent model common llama)
+    target_link_libraries(multi-agent-example PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(multi-agent-example PRIVATE cxx_std_17)
 
     # Context engineering example
@@ -233,7 +244,7 @@ if(AGENT_CPP_BUILD_EXAMPLES)
         ${LLAMA_SOURCE_DIR}/include
         ${LLAMA_SOURCE_DIR}/vendor
     )
-    target_link_libraries(context-engineering-example PRIVATE agent model common llama)
+    target_link_libraries(context-engineering-example PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(context-engineering-example PRIVATE cxx_std_17)
 
     # Grammar example
@@ -246,7 +257,7 @@ if(AGENT_CPP_BUILD_EXAMPLES)
         ${LLAMA_SOURCE_DIR}/include
         ${LLAMA_SOURCE_DIR}/vendor
     )
-    target_link_libraries(grammar-example PRIVATE agent model common llama)
+    target_link_libraries(grammar-example PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(grammar-example PRIVATE cxx_std_17)
 
     # MCP client example (requires MCP support)
@@ -260,7 +271,7 @@ if(AGENT_CPP_BUILD_EXAMPLES)
             ${LLAMA_SOURCE_DIR}/include
             ${LLAMA_SOURCE_DIR}/vendor
         )
-        target_link_libraries(mcp-example PRIVATE agent model mcp_client common llama)
+        target_link_libraries(mcp-example PRIVATE agent model mcp_client ${LLAMA_COMMON_TARGET} llama)
         target_compile_features(mcp-example PRIVATE cxx_std_17)
     endif()
 
