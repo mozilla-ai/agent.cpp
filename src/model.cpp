@@ -229,6 +229,8 @@ Model::generate(const std::vector<common_chat_msg>& messages,
     common_chat_parser_params syntax;
     // Use explicitly configured format, or fall back to auto-detected format
     syntax.format = config_.chat_format.value_or(params.format);
+    syntax.parser.load(params.parser);
+    syntax.generation_prompt = params.generation_prompt;
     syntax.parse_tool_calls = true;
 
     auto parsed_msg = common_chat_parse(response, false, syntax);
