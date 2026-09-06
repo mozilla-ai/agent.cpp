@@ -1,6 +1,7 @@
 #include "model.h"
 #include "test_utils.h"
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -10,6 +11,14 @@
 #endif
 
 namespace {
+
+// Progress markers on stderr, unbuffered: if a test hangs (as this one did on
+// Windows) the ctest timeout output shows exactly which phase it stalled in.
+void
+trace(const std::string& phase)
+{
+    std::cerr << "[trace] " << phase << std::endl;
+}
 
 std::string
 read_file(const std::string& path)
@@ -28,9 +37,14 @@ read_file(const std::string& path)
 common_chat_params
 apply_template(const std::string& template_name, bool with_tools)
 {
-    auto tmpls = common_chat_templates_init(
-      nullptr,
-      read_file(std::string(LLAMA_TEMPLATES_DIR) + "/" + template_name));
+    const std::string template_path =
+      std::string(LLAMA_TEMPLATES_DIR) + "/" + template_name;
+
+    trace("reading " + template_path);
+    const std::string template_source = read_file(template_path);
+
+    trace("initializing templates");
+    auto tmpls = common_chat_templates_init(nullptr, template_source);
 
     common_chat_msg user_msg;
     user_msg.role = "user";
@@ -52,7 +66,11 @@ apply_template(const std::string& template_name, bool with_tools)
     inputs.add_generation_prompt = true;
     inputs.enable_thinking = false;
 
-    return common_chat_templates_apply(tmpls.get(), inputs);
+    trace("applying template");
+    auto params = common_chat_templates_apply(tmpls.get(), inputs);
+    trace("template applied");
+
+    return params;
 }
 
 }

@@ -202,9 +202,16 @@ if(AGENT_CPP_BUILD_TESTS)
 
     # On Windows, DLLs are placed in the bin/ directory by llama.cpp
     # We need to add this directory to PATH so tests can find the DLLs
+    # A hung test must fail rather than hold the runner until the job limit
+    set_tests_properties(ToolTests CallbacksTests GrammarTests ChatParserTests
+        PROPERTIES TIMEOUT 120
+    )
+
     if(WIN32)
+        # Multi-config generators (Visual Studio) place DLLs in bin/<config>,
+        # single-config ones in bin/ - both are on PATH so tests can load them
         set_tests_properties(ToolTests CallbacksTests GrammarTests ChatParserTests PROPERTIES
-            ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/bin\;$ENV{PATH}"
+            ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}\;${CMAKE_BINARY_DIR}/bin/Release\;${CMAKE_BINARY_DIR}/bin\;$ENV{PATH}"
         )
     endif()
 
