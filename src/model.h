@@ -53,9 +53,10 @@ load_grammar_file(const std::string& grammar_path);
 /// @throws agent_cpp::ModelError if the response does not match the expected
 ///         format
 common_chat_msg
-parse_response(const common_chat_params& params,
-               const std::string& response,
-               std::optional<common_chat_format> format_override = std::nullopt);
+parse_response(
+  const common_chat_params& params,
+  const std::string& response,
+  std::optional<common_chat_format> format_override = std::nullopt);
 
 // Forward declaration
 class Model;

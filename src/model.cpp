@@ -236,7 +236,8 @@ parse_with_parser(const common_peg_arena& parser,
     syntax.parse_tool_calls = true;
 
     try {
-        auto parsed_msg = common_chat_peg_parse(parser, response, false, syntax);
+        auto parsed_msg =
+          common_chat_peg_parse(parser, response, false, syntax);
         parsed_msg.role = "assistant";
         return parsed_msg;
     } catch (const std::exception& e) {

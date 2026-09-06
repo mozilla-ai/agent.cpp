@@ -29,7 +29,8 @@ common_chat_params
 apply_template(const std::string& template_name, bool with_tools)
 {
     auto tmpls = common_chat_templates_init(
-      nullptr, read_file(std::string(LLAMA_TEMPLATES_DIR) + "/" + template_name));
+      nullptr,
+      read_file(std::string(LLAMA_TEMPLATES_DIR) + "/" + template_name));
 
     common_chat_msg user_msg;
     user_msg.role = "user";
@@ -86,7 +87,8 @@ TEST(test_plain_response_is_parsed_as_content)
 {
     auto params = apply_template("ibm-granite-granite-4.0.jinja", true);
 
-    auto parsed = agent_cpp::parse_response(params, "The result of 3 + 4 is 7.");
+    auto parsed =
+      agent_cpp::parse_response(params, "The result of 3 + 4 is 7.");
 
     ASSERT_TRUE(parsed.tool_calls.empty());
     ASSERT_EQ(parsed.content, std::string("The result of 3 + 4 is 7."));
