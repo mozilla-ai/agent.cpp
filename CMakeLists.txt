@@ -166,9 +166,26 @@ if(AGENT_CPP_BUILD_TESTS)
     target_link_libraries(test_callbacks PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(test_callbacks PRIVATE cxx_std_17)
 
+    add_executable(test_chat_parser tests/test_chat_parser.cpp)
+    target_include_directories(test_chat_parser PRIVATE
+        src
+        tests
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    # The test parses responses against real chat templates shipped by llama.cpp
+    target_compile_definitions(test_chat_parser PRIVATE
+        LLAMA_TEMPLATES_DIR="${LLAMA_SOURCE_DIR}/models/templates"
+    )
+    target_link_libraries(test_chat_parser PRIVATE model ${LLAMA_COMMON_TARGET} llama)
+    target_compile_features(test_chat_parser PRIVATE cxx_std_17)
+
     add_test(NAME ToolTests COMMAND test_tool)
     add_test(NAME CallbacksTests COMMAND test_callbacks)
     add_test(NAME GrammarTests COMMAND test_grammar)
+    add_test(NAME ChatParserTests COMMAND test_chat_parser)
 
     if(AGENT_CPP_BUILD_MCP)
         add_executable(test_mcp_client tests/test_mcp_client.cpp)
@@ -186,7 +203,7 @@ if(AGENT_CPP_BUILD_TESTS)
     # On Windows, DLLs are placed in the bin/ directory by llama.cpp
     # We need to add this directory to PATH so tests can find the DLLs
     if(WIN32)
-        set_tests_properties(ToolTests CallbacksTests GrammarTests PROPERTIES
+        set_tests_properties(ToolTests CallbacksTests GrammarTests ChatParserTests PROPERTIES
             ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/bin\;$ENV{PATH}"
         )
     endif()

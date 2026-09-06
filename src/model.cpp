@@ -203,6 +203,53 @@ Model::tokenize(const std::string& prompt) const
     return prompt_tokens;
 }
 
+namespace {
+
+/// Deserializes the PEG parser derived from the chat template. An empty
+/// definition yields an empty arena, which common_chat_peg_parse() treats as a
+/// pure-content parser.
+common_peg_arena
+load_parser(const std::string& parser_definition)
+{
+    common_peg_arena arena;
+    if (!parser_definition.empty()) {
+        arena.load(parser_definition);
+    }
+    return arena;
+}
+
+common_chat_msg
+parse_with_parser(const common_peg_arena& parser,
+                  const common_chat_params& params,
+                  const std::string& response,
+                  std::optional<common_chat_format> format_override)
+{
+    common_chat_parser_params syntax;
+    // Use explicitly configured format, or fall back to auto-detected format.
+    // Note that the format only selects the mapper; the PEG parser below is
+    // what actually drives parsing.
+    syntax.format = format_override.value_or(params.format);
+    // The parser is derived from the chat template together with the
+    // generation prompt it was built against, and parsing needs both
+    // (ggml-org/llama.cpp#18675). Without them tool calls stay as raw text.
+    syntax.generation_prompt = params.generation_prompt;
+    syntax.parse_tool_calls = true;
+
+    try {
+        auto parsed_msg = common_chat_peg_parse(parser, response, false, syntax);
+        parsed_msg.role = "assistant";
+        return parsed_msg;
+    } catch (const std::exception& e) {
+        // llama.cpp throws plain std::runtime_error when the output does not
+        // match the template's format; surface it as a library error so
+        // callers can catch it alongside the rest of agent.cpp.
+        throw ModelError(std::string("failed to parse model response: ") +
+                         e.what());
+    }
+}
+
+}
+
 common_chat_msg
 Model::generate(const std::vector<common_chat_msg>& messages,
                 const std::vector<common_chat_tool>& tools,
@@ -226,17 +273,24 @@ Model::generate(const std::vector<common_chat_msg>& messages,
 
     std::string response = generate_from_tokens(prompt_tokens, callback);
 
-    common_chat_parser_params syntax;
-    // Use explicitly configured format, or fall back to auto-detected format
-    syntax.format = config_.chat_format.value_or(params.format);
-    syntax.parser.load(params.parser);
-    syntax.generation_prompt = params.generation_prompt;
-    syntax.parse_tool_calls = true;
+    // The PEG parser only changes when the rendered template changes, so keep
+    // the deserialized arena around instead of re-parsing it every turn.
+    if (parser_source_ != params.parser) {
+        parser_arena_ = load_parser(params.parser);
+        parser_source_ = params.parser;
+    }
 
-    auto parsed_msg = common_chat_parse(response, false, syntax);
-    parsed_msg.role = "assistant";
+    return parse_with_parser(
+      parser_arena_, params, response, config_.chat_format);
+}
 
-    return parsed_msg;
+common_chat_msg
+parse_response(const common_chat_params& params,
+               const std::string& response,
+               std::optional<common_chat_format> format_override)
+{
+    return parse_with_parser(
+      load_parser(params.parser), params, response, format_override);
 }
 
 std::string
