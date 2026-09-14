@@ -6,6 +6,10 @@ This directory contains example applications demonstrating agent.cpp capabilitie
 
 The [grammar](./grammar) example demonstrates constraining model output to a GBNF grammar, so every response is guaranteed to match a fixed structure. You can also point it at a custom grammar file and root rule.
 
+## LoRA
+
+The [lora](./lora) example demonstrates loading a GGUF LoRA adapter onto a model with a configurable scale.
+
 ## Shared Utilities
 
 The [shared](./shared) directory contains reusable helper components used across multiple examples. These are **not part of the public API** but can be useful as reference implementations.

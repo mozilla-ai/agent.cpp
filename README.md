@@ -11,6 +11,8 @@ Building blocks for **local** agents in C++.
 
 - **[Grammar](./examples/grammar/README.md)** - Constrain model output to a GBNF grammar so every response matches a fixed structure.
 
+- **[LoRA](./examples/lora/README.md)** - Apply a GGUF LoRA adapter to a model with a configurable scale.
+
 - **[Memory](./examples/memory/README.md)** - Use tools that allow an agent to store and retrieve relevant information across conversations.
 
 - **[Multi-Agent](./examples/multi-agent/README.md)** - Build a multi-agent system with weight sharing where a main agent delegates to specialized sub-agents.
@@ -85,6 +87,21 @@ config.grammar_root = "root"; // optional, defaults to "root"
 A grammar constrains every response, including the ones the agent would use to call a tool. If the grammar does not allow the tool-call format, the agent cannot call tools, so grammars are best used with agents that only need to produce text.
 
 See the [Grammar example](./examples/grammar/README.md) for a full working demo.
+
+### LoRA adapters
+
+Each `Model` can load its own [LoRA adapters](https://github.com/ggml-org/llama.cpp/tree/master/tools/completion#lora-low-rank-adaptation-adapters) on top of the shared base weights, useful for giving specialized agents in a [multi-agent](./examples/multi-agent/README.md) setup their own fine-tuned behavior without duplicating the base model in memory:
+
+```cpp
+ModelConfig config;
+config.loras = {
+    { "path/to/adapter.gguf", 1.0F },  // path, scale (defaults to 1.0)
+};
+
+auto model = Model::create_with_weights(shared_weights, config);
+```
+
+Multiple adapters may be stacked by adding more entries; each is scaled independently. See the [LoRA example](./examples/lora/README.md) for instructions on converting adapters from common training formats to GGUF.
 
 ## Tools
 

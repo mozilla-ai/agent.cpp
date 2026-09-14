@@ -154,6 +154,18 @@ if(AGENT_CPP_BUILD_TESTS)
     target_link_libraries(test_grammar PRIVATE model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(test_grammar PRIVATE cxx_std_17)
 
+    add_executable(test_lora tests/test_lora.cpp)
+    target_include_directories(test_lora PRIVATE
+        src
+        tests
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(test_lora PRIVATE model ${LLAMA_COMMON_TARGET} llama)
+    target_compile_features(test_lora PRIVATE cxx_std_17)
+
     add_executable(test_callbacks tests/test_callbacks.cpp)
     target_include_directories(test_callbacks PRIVATE
         src
@@ -185,6 +197,7 @@ if(AGENT_CPP_BUILD_TESTS)
     add_test(NAME ToolTests COMMAND test_tool)
     add_test(NAME CallbacksTests COMMAND test_callbacks)
     add_test(NAME GrammarTests COMMAND test_grammar)
+    add_test(NAME LoraTests COMMAND test_lora)
     add_test(NAME ChatParserTests COMMAND test_chat_parser)
 
     if(AGENT_CPP_BUILD_MCP)
@@ -203,14 +216,14 @@ if(AGENT_CPP_BUILD_TESTS)
     # On Windows, DLLs are placed in the bin/ directory by llama.cpp
     # We need to add this directory to PATH so tests can find the DLLs
     # A hung test must fail rather than hold the runner until the job limit
-    set_tests_properties(ToolTests CallbacksTests GrammarTests ChatParserTests
+    set_tests_properties(ToolTests CallbacksTests GrammarTests LoraTests ChatParserTests
         PROPERTIES TIMEOUT 120
     )
 
     if(WIN32)
         # Multi-config generators (Visual Studio) place DLLs in bin/<config>,
         # single-config ones in bin/ - both are on PATH so tests can load them
-        set_tests_properties(ToolTests CallbacksTests GrammarTests ChatParserTests PROPERTIES
+        set_tests_properties(ToolTests CallbacksTests GrammarTests LoraTests ChatParserTests PROPERTIES
             ENVIRONMENT "PATH=${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}\;${CMAKE_BINARY_DIR}/bin/Release\;${CMAKE_BINARY_DIR}/bin\;$ENV{PATH}"
         )
     endif()
@@ -283,6 +296,19 @@ if(AGENT_CPP_BUILD_EXAMPLES)
     )
     target_link_libraries(grammar-example PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
     target_compile_features(grammar-example PRIVATE cxx_std_17)
+
+    # LoRA example
+    add_executable(lora-example examples/lora/lora.cpp)
+    target_include_directories(lora-example PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/examples/shared
+        ${LLAMA_SOURCE_DIR}/common
+        ${LLAMA_SOURCE_DIR}/ggml/include
+        ${LLAMA_SOURCE_DIR}/include
+        ${LLAMA_SOURCE_DIR}/vendor
+    )
+    target_link_libraries(lora-example PRIVATE agent model ${LLAMA_COMMON_TARGET} llama)
+    target_compile_features(lora-example PRIVATE cxx_std_17)
 
     # MCP client example (requires MCP support)
     if(AGENT_CPP_BUILD_MCP)
