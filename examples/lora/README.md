@@ -102,7 +102,7 @@ $ ./examples/lora/build/lora-example \
   -m ./granite-4.0-micro-Q8_0.gguf \
   -l ./query_rewrite_lora.gguf \
   -s 0.25
-  
+
 > Task: Rewrite the latest question as a self-contained question.
 
 Here is the latest question rewritten as a self-contained question:
