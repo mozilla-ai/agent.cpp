@@ -83,6 +83,9 @@ Model::~Model()
     if (ctx_ != nullptr) {
         llama_free(ctx_);
     }
+    for (llama_adapter_lora* lora : loras_) {
+        llama_adapter_lora_free(lora);
+    }
     // weights_ is automatically released when ref count drops to zero
 }
 
@@ -91,6 +94,7 @@ Model::Model(Model&& other) noexcept
   , ctx_(other.ctx_)
   , sampler_(other.sampler_)
   , grammar_sampler_(other.grammar_sampler_)
+  , loras_(std::move(other.loras_))
   , processed_tokens_(std::move(other.processed_tokens_))
   , n_past_(other.n_past_)
   , config_(other.config_)
@@ -111,11 +115,15 @@ Model::operator=(Model&& other) noexcept
         if (ctx_ != nullptr) {
             llama_free(ctx_);
         }
+        for (llama_adapter_lora* lora : loras_) {
+            llama_adapter_lora_free(lora);
+        }
 
         weights_ = std::move(other.weights_);
         ctx_ = other.ctx_;
         sampler_ = other.sampler_;
         grammar_sampler_ = other.grammar_sampler_;
+        loras_ = std::move(other.loras_);
         processed_tokens_ = std::move(other.processed_tokens_);
         n_past_ = other.n_past_;
         config_ = other.config_;
@@ -144,6 +152,25 @@ Model::initialize_context(const ModelConfig& model_config)
     ctx_ = llama_init_from_model(weights_->get_model(), ctx_params);
     if (ctx_ == nullptr) {
         throw ModelError("failed to create llama context");
+    }
+
+    if (!model_config.loras.empty()) {
+        std::vector<float> scales;
+        scales.reserve(model_config.loras.size());
+        for (const LoraAdapterConfig& lora_config : model_config.loras) {
+            llama_adapter_lora* lora = llama_adapter_lora_init(
+              weights_->get_model(), lora_config.path.c_str());
+            if (lora == nullptr) {
+                throw ModelError("failed to load LoRA adapter '" +
+                                 lora_config.path + "'");
+            }
+            loras_.push_back(lora);
+            scales.push_back(lora_config.scale);
+        }
+        if (llama_set_adapters_lora(
+              ctx_, loras_.data(), loras_.size(), scales.data()) != 0) {
+            throw ModelError("failed to apply LoRA adapters to context");
+        }
     }
 
     sampler_ = llama_sampler_chain_init(llama_sampler_chain_default_params());

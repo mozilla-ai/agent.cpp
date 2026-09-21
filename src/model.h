@@ -8,11 +8,19 @@
 #include <optional>
 #include <string>
 #include <thread>
+#include <vector>
 
 namespace agent_cpp {
 
 // Callback for streaming response chunks
 using ResponseCallback = std::function<void(const std::string& chunk)>;
+
+// LoRA adapter configuration
+struct LoraAdapterConfig
+{
+    std::string path;
+    float scale = 1.0F;
+};
 
 // Model configuration with sensible defaults
 struct ModelConfig
@@ -36,6 +44,11 @@ struct ModelConfig
     // Optional GBNF grammar and root rule name
     std::string grammar;
     std::string grammar_root = "root";
+    // Optional LoRA adapters applied to this Model's context. Multiple
+    // adapters may be stacked; each is scaled independently. Adapters are
+    // loaded from the shared ModelWeights' base model, so different Model
+    // instances sharing the same weights can each carry their own set.
+    std::vector<LoraAdapterConfig> loras;
 };
 
 /// Reads a GBNF file into a string for ModelConfig::grammar
@@ -184,6 +197,12 @@ class Model
         return weights_;
     }
 
+    // Get the loaded LoRA adapters
+    [[nodiscard]] const std::vector<llama_adapter_lora*>& get_loras() const
+    {
+        return loras_;
+    }
+
     // Save the current KV cache state (processed_tokens) to a file
     // Returns true on success, false on failure
     bool save_cache(const std::string& cache_path);
@@ -210,6 +229,10 @@ class Model
     // Non-owning pointer to the grammar sampler in sampler_'s chain
     // Reset this one between turns without resetting the rest of the chain
     llama_sampler* grammar_sampler_ = nullptr;
+    // Owning handles for this Model's LoRA adapters, in ModelConfig::loras
+    // order. Set on this Model's context only, so different Model instances
+    // sharing the same ModelWeights can carry independent adapters.
+    std::vector<llama_adapter_lora*> loras_;
     std::vector<llama_token> processed_tokens_; // Track tokens in KV cache
     int n_past_ = 0;                            // Track position in KV cache
     ModelConfig config_;
